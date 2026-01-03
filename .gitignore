@@ -1,5 +1,6 @@
 # Logs, context files for infrastructure-as-code tools
 infra-context/
+build/
 
 # vagrant
 .vagrant/

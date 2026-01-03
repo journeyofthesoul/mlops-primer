@@ -7,6 +7,12 @@ API_ADV_ADDRESS = "192.168.56.10"
 Vagrant.configure("2") do |config|
   config.vm.box = BOX_IMAGE
   config.vm.box_version = BOX_VERSION
+
+  config.trigger.before :up do |t|
+    t.name = "Build ML images on host"
+    t.run = {
+      inline: "bash setup/build.sh"
+    }
   end
 
   config.vm.define "kube-control-plane" do |node|
@@ -32,6 +38,7 @@ Vagrant.configure("2") do |config|
       end
       node.vm.provision "shell", path: "./setup/common.sh"
       node.vm.provision "shell", path: "./setup/worker.sh", args: "#{i}"
+      node.vm.provision "shell", path: "./setup/import-images.sh"
     end
   end
 
