@@ -9,6 +9,6 @@ systemctl daemon-reload
 echo "KUBELET_EXTRA_ARGS=--node-ip=$NODE_HOST_IP --cgroup-driver=systemd" > /etc/default/kubelet
 systemctl restart kubelet
 
-cp /vagrant/admin.conf /etc/kubernetes/admin.conf
+cp /vagrant/infra-context/admin.conf /etc/kubernetes/admin.conf
 chmod ugo+r /etc/kubernetes/admin.conf
 echo "KUBECONFIG=/etc/kubernetes/admin.conf" >> /etc/environment
