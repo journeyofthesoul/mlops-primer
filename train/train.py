@@ -8,8 +8,12 @@ import os
 
 # Settings
 TICKER = "SPY"
-MODEL_DIR = "/app/artifacts"
-MODEL_PATH = os.path.join(MODEL_DIR, "model.joblib")
+BASE_DIR = os.getenv("BASE_DIR", os.getcwd())
+MODEL_DIR = os.path.join(BASE_DIR, "model")
+MODEL_PATH = os.getenv(
+    "MODEL_PATH",  # env variable in Docker/K8s
+    os.path.join(MODEL_DIR, "model.joblib")  # local dev
+)
 
 os.makedirs(MODEL_DIR, exist_ok=True)
 
