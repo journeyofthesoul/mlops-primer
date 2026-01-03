@@ -24,6 +24,8 @@ sudo mv /etc/containerd/config.toml /etc/containerd/config.toml.orig
 containerd config default | sudo tee /etc/containerd/config.toml
 sudo sed -i 's/SystemdCgroup \= false/SystemdCgroup \= true/g' /etc/containerd/config.toml
 
+mkdir -p /vagrant/infra-context
+
 ARCH=$(uname -m)
 if [ "$ARCH" == "x86_64" ]; then
     ARCH="amd64"

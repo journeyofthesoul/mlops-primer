@@ -7,7 +7,7 @@ fi
 POD_CIDR=$1
 API_ADV_ADDRESS=$2
 
-kubeadm init --kubernetes-version v${K8S_VERSION:0:6} --pod-network-cidr $POD_CIDR --apiserver-advertise-address $API_ADV_ADDRESS | tee /vagrant/kubeadm-init.out
+kubeadm init --kubernetes-version v${K8S_VERSION:0:6} --pod-network-cidr $POD_CIDR --apiserver-advertise-address $API_ADV_ADDRESS | tee /vagrant/infra-context/kubeadm-init.out
 
 systemctl daemon-reload
 echo "KUBELET_EXTRA_ARGS=--node-ip=$API_ADV_ADDRESS --cgroup-driver=systemd" > /etc/default/kubelet
@@ -25,4 +25,4 @@ sed -i 's~cidr: 192\.168\.0\.0/16~cidr: 172\.18\.0\.0/16~g' custom-resources.yam
 kubectl create -f custom-resources.yaml
 rm custom-resources.yaml
 
-cp /etc/kubernetes/admin.conf /vagrant/admin.conf
+cp /etc/kubernetes/admin.conf /vagrant/infra-context/admin.conf
