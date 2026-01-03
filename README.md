@@ -166,11 +166,11 @@ This will:
 
 Cluster access config will be generated locally.
 
-Yes, I'm a stickler for automation. I do not want to burden developers with needing to run a multitude of scripts or setup commands to use my tools.
+**YES** - I'm a stickler for automation. I do not want to burden developers with needing to run a multitude of scripts or setup commands to use my tools.
 
 ---
 
-## What this project demonstrates
+## What this project demonstrates (TODO)
 
 **ML workflow concepts**:
 
@@ -240,7 +240,7 @@ Key idea:
 
 ---
 
-## Deploying the ML workloads
+## Deploying the ML workloads (Mental MAP - not yet implemented)
 
 ### 1. Run the training job (TODO)
 
