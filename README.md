@@ -1,4 +1,4 @@
-# ML Workflow Primer (Local Kubernetes w/ scikit-learn)
+# MLOps Workflow Primer (Local Kubernetes w/ scikit-learn)
 
 This repository is a **small, end‑to‑end MLOps / ML‑workflow primer** designed to run **entirely on a local machine** using **Vagrant + Kubernetes (containerd)**.
 
@@ -39,6 +39,99 @@ It is designed to be read, modified, and extended — not treated as a black box
 
   * Avoids magic abstractions
   * Easy to reason about for learning purposes
+
+---
+
+## Training workflow
+
+### Data source
+
+The training workflow uses **public financial time‑series data** fetched at runtime via the `yfinance` library.
+
+* Data type: historical price data (e.g. open / close / volume)
+* Source: Yahoo Finance (via yfinance)
+* Scope: a single financial instrument over a recent time window
+
+The data is retrieved **inside the training container at job execution time**, ensuring:
+
+* no bundled datasets
+* no manual data downloads
+* a realistic external‑data dependency
+
+---
+
+### Training objective
+
+The goal of the training job is intentionally simple:
+
+> Learn a relationship from historical price data and produce a model capable of making a **short‑horizon numerical prediction** (e.g. a next‑day value).
+
+This is **not** intended to be a production‑grade financial model.
+The emphasis is on **workflow mechanics**, not predictive performance.
+
+---
+
+### Feature preparation
+
+At a high level, the training job:
+
+1. Downloads historical time‑series data
+2. Extracts basic numerical features from the data
+
+   * recent prices
+   * simple derived values (e.g. rolling statistics)
+3. Constructs a supervised learning dataset
+
+   * features derived from past values
+   * target representing a future value
+
+All feature logic lives entirely inside the training container, keeping the job self‑contained.
+
+---
+
+### Model training
+
+* Framework: **scikit‑learn**
+* Model: a lightweight regression model
+
+The model is chosen to be:
+
+* fast to train
+* deterministic
+* easy to serialize and reload
+
+This keeps training times short and makes the workflow easy to inspect.
+
+---
+
+### Model artifact
+
+After training completes:
+
+* The trained model is serialized to disk
+* The artifact is written to a shared location
+* No model state is kept in memory after job completion
+
+This mirrors a common production pattern:
+
+> **Training produces artifacts; serving consumes artifacts**
+
+---
+
+### Why this workflow
+
+This training pipeline is intentionally minimal, but demonstrates key ML workflow concepts:
+
+* Batch training as a Kubernetes Job
+* External data dependency at runtime
+* Clear separation of training and inference
+* Artifact‑based handoff between components
+
+The simplicity makes it easy to extend later with:
+
+* scheduled retraining (CronJob)
+* experiment tracking (e.g. MLflow)
+* model versioning
 
 ---
 
@@ -144,19 +237,6 @@ Key idea:
 ├── Vagrantfile           # Local Kubernetes cluster definition
 └── README.md
 ```
-
----
-
-## Technology stack
-
-* **Python** 3.x
-* **scikit‑learn** (model training)
-* **FastAPI** (inference API)
-* **yfinance** (example external data source)
-* **Docker** (host‑side image builds only)
-* **containerd** (Kubernetes runtime)
-* **Kubernetes** (kubeadm‑based cluster)
-* **Vagrant** + VirtualBox (local cluster provisioning)
 
 ---
 
