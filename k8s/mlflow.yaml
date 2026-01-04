@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: mlflow
-          image: mlflow:2.5.0
+          image: ghcr.io/mlflow/mlflow:latest
           env:
             - name: MLFLOW_TRACKING_URI
               value: sqlite:///mlflow.db
