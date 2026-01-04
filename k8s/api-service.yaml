@@ -36,7 +36,7 @@ kind: Service
 metadata:
   name: ml-api-svc
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: ml-api
   ports:
