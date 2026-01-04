@@ -1,7 +1,6 @@
 import os
 
 import joblib
-import pandas as pd
 import yfinance as yf
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
