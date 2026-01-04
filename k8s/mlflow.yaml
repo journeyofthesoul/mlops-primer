@@ -20,6 +20,12 @@ spec:
               value: sqlite:///mlflow.db
           ports:
             - containerPort: 5000
+          args:
+            - mlflow
+            - server
+            - --backend-store-uri=sqlite:///mlflow.db
+            - --default-artifact-root=/mlflow
+            - --host=0.0.0.0
           volumeMounts:
             - mountPath: /mlflow
               name: mlflow-pv
