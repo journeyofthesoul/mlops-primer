@@ -16,8 +16,9 @@ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/st
 # 2. Expose ArgoCD server via NodePort
 kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "NodePort"}}'
 
-# 3. Create namespace for ArgoCD Destination
+# 3. Setup ArgoCD Application w/ Destination Namespace
 kubectl create namespace mlops-dev || true
+kubectl apply -f /vagrant/argo/mlops-app.yaml
 
 # 4. Get NodePort and initial password
 NODE_PORT=$(kubectl get svc argocd-server -n argocd -o jsonpath='{.spec.ports[0].nodePort}')
