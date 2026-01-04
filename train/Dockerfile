@@ -5,8 +5,8 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        build-essential=12.9 \
-        curl=7.88.1-1+deb12u1 && \
+        build-essential=12.12 \
+        curl=8.14.1-2+deb13u2 && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy dependencies and install

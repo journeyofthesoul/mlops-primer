@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ml-train
+spec:
+  schedule: "0 * * * *" # Runs every hour at minute 0
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: ml-train
+              image: localhost/ml-train:latest
+              env:
+                - name: MODEL_PATH
+                  value: /mnt/model/model.joblib
+              volumeMounts:
+                - mountPath: /mnt/model
+                  name: model-pv
+          restartPolicy: OnFailure
+          volumes:
+            - name: model-pv
+              persistentVolumeClaim:
+                claimName: model-pvc

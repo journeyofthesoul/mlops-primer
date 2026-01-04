@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: feast-core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: feast-core
+  template:
+    metadata:
+      labels:
+        app: feast-core
+    spec:
+      containers:
+        - name: feast-core
+          image: feastdev/feast:latest
+          ports:
+            - containerPort: 6565
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: feast-serving
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: feast-serving
+  template:
+    metadata:
+      labels:
+        app: feast-serving
+    spec:
+      containers:
+        - name: feast-serving
+          image: feastdev/feast-serving:latest
+          ports:
+            - containerPort: 6566
