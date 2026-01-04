@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+import os
+
 import joblib
 import pandas as pd
 import yfinance as yf
-import os
+from fastapi import FastAPI
 
 
 app = FastAPI()
