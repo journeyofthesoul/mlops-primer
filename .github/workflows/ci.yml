@@ -30,10 +30,10 @@ jobs:
 
       - name: Lint Python
         run: |
-          flake8 train.py api.py
-          black --check train.py api.py
-          isort --check-only train.py api.py
-          mypy train.py api.py
+          flake8 ./train/train.py ./api/api.py
+          black --check ./train/train.py ./api/api.py
+          isort --check-only ./train/train.py ./api/api.py
+          mypy ./train/train.py ./api/api.py
 
   lint-docker:
     runs-on: ubuntu-latest
@@ -48,5 +48,5 @@ jobs:
 
       - name: Lint Dockerfiles
         run: |
-          hadolint Dockerfile.train
-          hadolint Dockerfile.api
+          hadolint ./train/Dockerfile
+          hadolint ./api/Dockerfile
