@@ -15,7 +15,6 @@ MODEL_PATH = os.getenv(
     ),  # local dev
 )
 
-
 # Load model at startup
 model = joblib.load(MODEL_PATH)
 
