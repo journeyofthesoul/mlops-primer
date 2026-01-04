@@ -1,10 +1,9 @@
 import yfinance as yf
-import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 import joblib
 import os
+
 
 # Settings
 TICKER = "SPY"
@@ -12,7 +11,7 @@ BASE_DIR = os.getenv("BASE_DIR", os.getcwd())
 MODEL_DIR = os.path.join(BASE_DIR, "model")
 MODEL_PATH = os.getenv(
     "MODEL_PATH",  # env variable in Docker/K8s
-    os.path.join(MODEL_DIR, "model.joblib")  # local dev
+    os.path.join(MODEL_DIR, "model.joblib"),  # local dev
 )
 
 os.makedirs(MODEL_DIR, exist_ok=True)

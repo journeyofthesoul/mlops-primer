@@ -3,7 +3,11 @@ FROM python:3.14-slim
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y build-essential curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential=12.9 \
+        curl=7.88.1-1+deb12u1 && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy dependencies and install
 COPY requirements.txt .

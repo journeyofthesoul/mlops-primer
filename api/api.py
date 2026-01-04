@@ -4,15 +4,17 @@ import pandas as pd
 import yfinance as yf
 import os
 
+
 app = FastAPI()
 
 MODEL_PATH = os.getenv(
     "MODEL_PATH",  # env variable in Docker/K8s
-    os.path.join(os.path.dirname(__file__), "../train/model/model.joblib")  # local dev
+    os.path.join(os.path.dirname(__file__), "../train/model/model.joblib"),  # local dev
 )
 
 # Load model at startup
 model = joblib.load(MODEL_PATH)
+
 
 def get_latest_features():
     df = yf.download("SPY", period="30d", interval="1d")
@@ -25,11 +27,12 @@ def get_latest_features():
     feature_cols = ["return", "ma_5", "ma_20", "volatility_10"]
     return pd.DataFrame([latest[feature_cols]])
 
+
 @app.get("/predictionForTomorrow")
 def predict():
     X = get_latest_features()
     prob = model.predict_proba(X)[0][1]
     return {
         "prediction": "UP" if prob > 0.5 else "DOWN",
-        "confidence": round(float(prob), 3)
+        "confidence": round(float(prob), 3),
     }
