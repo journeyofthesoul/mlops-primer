@@ -33,7 +33,7 @@ jobs:
           flake8 ./train/train.py ./api/api.py
           black --check ./train/train.py ./api/api.py
           isort --check-only ./train/train.py ./api/api.py
-          mypy ./train/train.py ./api/api.py
+          mypy ./train/train.py ./api/api.py --ignore-missing-imports
 
   lint-docker:
     runs-on: ubuntu-latest

@@ -5,7 +5,6 @@ import yfinance as yf
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 
-
 # Settings
 TICKER = "SPY"
 BASE_DIR = os.getenv("BASE_DIR", os.getcwd())

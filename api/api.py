@@ -5,7 +5,6 @@ import pandas as pd
 import yfinance as yf
 from fastapi import FastAPI
 
-
 app = FastAPI()
 
 MODEL_PATH = os.getenv(
