@@ -2,7 +2,7 @@
 
 This repository is a **small, end‑to‑end MLOps / ML‑workflow primer** designed to run **entirely on a local machine** using **Vagrant + Kubernetes (containerd)**.
 
-The goal is **not** model sophistication, but to demonstrate **core ML workflow fundamentals**:
+The goal is **not** model sophistication, but to demonstrate **core ML workflow fundamentals** as simple as possible:
 
 * Data ingestion from an external source
 * Batch training as a Kubernetes Job
@@ -11,19 +11,14 @@ The goal is **not** model sophistication, but to demonstrate **core ML workflow 
 * Separation of training and serving concerns
 * Reproducible, infrastructure‑aware setup
 
-This project is intentionally kept small, explicit, and readable.
-
 ---
 
 ## Project Rationale
-This project is a learning/simulation environment made for DevOps / Platform / Site-Reliability Engineers wanting to transition to MLOps. 
+This project aims to be a learning/simulation environment for DevOps / Platform / Site-Reliability Engineers wanting to transition to MLOps. 
 
-This project exists to:
+It exists to demonstrate **ML workflow fundamentals** in a way that is local, inspectable, reproducible, and infrastructure‑aware.
 
-> Demonstrate **ML workflow fundamentals** in a way that is
-> local, inspectable, reproducible, and infrastructure‑aware.
-
-It is designed to be read, modified, and extended — not treated as a black box. As such, the following design considerations were intentionally made:
+It is designed to be read, modified, and extended — not treated as a black box. That is why it uses purely open-source tools running locally - those that can be tinkered without worry in the safe confines of one's personal computer. As such, the following design considerations were intentionally made:
 
 * **No public image registry**
 
@@ -127,12 +122,6 @@ This training pipeline is intentionally minimal, but demonstrates key ML workflo
 * Clear separation of training and inference
 * Artifact‑based handoff between components
 
-The simplicity makes it easy to extend later with:
-
-* scheduled retraining (CronJob)
-* experiment tracking (e.g. MLflow)
-* model versioning
-
 ---
 
 ## Prerequisites
@@ -142,10 +131,9 @@ On the host machine:
 * Docker
 * Vagrant
 * VirtualBox
-* kubectl
+* kubectl (Optional)
 
-> Docker is **only required on the host** to build images.
-> The Kubernetes nodes use **containerd**, not Docker.
+You will only ever need Vagrant, but vagrant needs docker and virtualbox as part of the workflow it is programmed in the Vagrantfile in setting up the development environment. You can ssh inside the VM and run kubectl from inside the nodes, but you may want to run kubectl outside the VMs in which case you need it installed.
 
 ---
 
@@ -161,12 +149,12 @@ This will:
 
 1. Provision a local Kubernetes cluster
 2. Build ML images on the host
-3. Import images into containerd on each node
+3. Import the Api Service and Training Service images into containerd on the worker node
 4. Initialize Kubernetes components
 
 Cluster access config will be generated locally.
 
-**YES** - I'm a stickler for automation. I do not want to burden developers with needing to run a multitude of scripts or setup commands to use my tools.
+**YES** - I'm a stickler for automation. Everything is automated - no step 1 run this, step 2 run that and that. I do not want to burden developers with the need to run a multitude of scripts or setup commands to use my tools.
 
 ---
 
@@ -189,7 +177,7 @@ Cluster access config will be generated locally.
 
 ---
 
-## Architecture overview (TODO)
+## Architecture overview
 
 High‑level flow:
 
@@ -212,87 +200,28 @@ Key idea:
 
 ---
 
-## Repository structure (TODO)
+## Interacting with the service
 
-```
-.
-├── api/                  # Inference service (FastAPI)
-│   ├── app.py
-│   ├── Dockerfile
-│   └── requirements.txt
-│
-├── train/                # Training job (scikit‑learn)
-│   ├── train.py
-│   ├── Dockerfile
-│   └── requirements.txt
-│
-├── k8s/                  # Kubernetes manifests
-│   ├── train-job.yaml
-│   ├── api-deployment.yaml
-│   └── api-service.yaml
-│
-├── setup/                # Host-side helper scripts
-│   └── build.sh
-│
-├── Vagrantfile           # Local Kubernetes cluster definition
-└── README.md
-```
-
----
-
-## Deploying the ML workloads (Mental MAP - not yet implemented)
-
-### 1. Run the training job (TODO)
+From your terminal, run:
 
 ```bash
-kubectl apply -f k8s/train-job.yaml
+curl http://<node-ip>:30951/predictionForTomorrow
 ```
 
-Check status:
+Example Execution:
 
 ```bash
-kubectl get jobs
-kubectl logs job/ml-train
+curl http://192.168.56.10:30951/predictionForTomorrow
+
+{"prediction":"DOWN","confidence":0.345}
 ```
 
-This job:
-
-* Pulls financial time‑series data
-* Trains a simple scikit‑learn model
-* Saves the model artifact
-
----
-
-### 2. Deploy the inference API (TODO)
-
+An easy way to find the NodeIPs is via the kubectl command and go for INTERNAL-IP:
 ```bash
-kubectl apply -f k8s/api-deployment.yaml
-kubectl apply -f k8s/api-service.yaml
-```
-
-Check status:
-
-```bash
-kubectl get pods
-kubectl get svc
-```
-
----
-
-### 3. Query the API (TODO)
-
-Example request:
-
-```bash
-curl http://<node-ip>:<node-port>/predictionForTomorrow
-```
-
-Example response:
-
-```json
-{
-  "prediction": 123.45
-}
+vagrant@kube-worker-1:~$ kubectl get nodes -o wide
+NAME                 STATUS   ROLES           AGE   VERSION   INTERNAL-IP     EXTERNAL-IP   OS-IMAGE       KERNEL-VERSION      CONTAINER-RUNTIME
+kube-control-plane   Ready    control-plane   66m   v1.31.1   192.168.56.10   <none>        Ubuntu 25.04   6.14.0-34-generic   containerd://2.2.1
+kube-worker-1        Ready    <none>          65m   v1.31.1   192.168.56.21   <none>        Ubuntu 25.04   6.14.0-34-generic   containerd://2.2.1
 ```
 
 ---
@@ -419,13 +348,8 @@ Example response:
 
 ## Next extensions
 
-* Add MLflow for experiment tracking
-* Configure Argo CD Workflows for k8s manifests
-* Automate retraining via CronJob
-* Add model versioning using a Model Registry
-* Add a feature store (Feast)
+* Add MLflow for experiment tracking and model registration (current release only runs it on the side, with no app integration yet)
 * Add another interface to the model via KServe (to compare with a regular FastAPI)
-* Replace local storage with object storage
-* Add a standard DevOps pipeline using Github Actions to test the python code
+* Replace local storage with object storage (Maybe)
 
 ---
