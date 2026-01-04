@@ -1,7 +1,12 @@
+---
+# Feast Core Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: feast-core
+  namespace: mlops-dev
+  labels:
+    app: feast-core
 spec:
   replicas: 1
   selector:
@@ -14,14 +19,39 @@ spec:
     spec:
       containers:
         - name: feast-core
-          image: feastdev/feast:latest
+          image: feastdev/feast-core:0.26.3 # use latest stable version
           ports:
             - containerPort: 6565
+          env:
+            - name: FEAST_CORE_DB_HOST
+              value: postgres # change if using external DB
+            - name: FEAST_CORE_DB_PORT
+              value: "5432"
+
 ---
+# Feast Core Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: feast-core-svc
+  namespace: mlops-dev
+spec:
+  type: ClusterIP
+  selector:
+    app: feast-core
+  ports:
+    - port: 6565
+      targetPort: 6565
+
+---
+# Feast Serving Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: feast-serving
+  namespace: mlops-dev
+  labels:
+    app: feast-serving
 spec:
   replicas: 1
   selector:
@@ -34,6 +64,24 @@ spec:
     spec:
       containers:
         - name: feast-serving
-          image: feastdev/feast-serving:latest
+          image: feastdev/feast-serving:0.26.3
           ports:
             - containerPort: 6566
+          env:
+            - name: FEAST_CORE_URL
+              value: feast-core-svc:6565 # connects to Feast Core
+
+---
+# Feast Serving Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: feast-serving-svc
+  namespace: mlops-dev
+spec:
+  type: ClusterIP
+  selector:
+    app: feast-serving
+  ports:
+    - port: 6566
+      targetPort: 6566
