@@ -1,3 +1,6 @@
+# Local models
+*/model/
+
 # Logs, context files for infrastructure-as-code tools
 infra-context/
 build/
