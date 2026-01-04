@@ -11,6 +11,7 @@ spec:
           containers:
             - name: ml-train
               image: localhost/ml-train:latest
+              imagePullPolicy: Never
               env:
                 - name: MODEL_PATH
                   value: /mnt/model/model.joblib
