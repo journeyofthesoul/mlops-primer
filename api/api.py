@@ -9,8 +9,12 @@ app = FastAPI()
 
 MODEL_PATH = os.getenv(
     "MODEL_PATH",  # env variable in Docker/K8s
-    os.path.join(os.path.dirname(__file__), "../train/model/model.joblib"),  # local dev
+    os.path.join(
+        os.path.dirname(__file__),
+        "../train/model/model.joblib",
+    ),  # local dev
 )
+
 
 # Load model at startup
 model = joblib.load(MODEL_PATH)
