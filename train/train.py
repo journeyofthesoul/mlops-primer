@@ -2,10 +2,9 @@ import logging
 import os
 
 import joblib
+from data_sources.yfinance_source import YFinanceDataSource
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
-
-from data_sources.yfinance_source import YFinanceDataSource
 
 logging.basicConfig(
     level=logging.INFO,
