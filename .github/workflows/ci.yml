@@ -30,10 +30,10 @@ jobs:
 
       - name: Lint Python
         run: |
-          flake8 ./train/train.py ./api/api.py
-          black --check ./train/train.py ./api/api.py
-          isort --check-only ./train/train.py ./api/api.py
-          mypy ./train/train.py ./api/api.py --ignore-missing-imports
+          flake8 ./train/train.py ./api/api.py ./train/data_sources/
+          black --check ./train/train.py ./api/api.py ./train/data_sources/
+          isort --check-only ./train/train.py ./api/api.py ./train/data_sources/
+          mypy ./train/train.py ./api/api.py ./train/data_sources/ --ignore-missing-imports
 
   lint-docker:
     runs-on: ubuntu-latest

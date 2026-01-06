@@ -15,6 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy training code
 COPY train.py .
+COPY data_sources/ data_sources/
 
 # Default command
 CMD ["python", "train.py"]
