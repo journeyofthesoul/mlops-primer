@@ -26,6 +26,13 @@ spec:
             - --backend-store-uri=sqlite:///mlflow.db
             - --default-artifact-root=/mlflow
             - --host=0.0.0.0
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 2
+              memory: 4Gi
           volumeMounts:
             - mountPath: /mlflow
               name: mlflow-pv
