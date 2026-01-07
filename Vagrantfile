@@ -26,6 +26,7 @@ Vagrant.configure("2") do |config|
 
     node.vm.provision "shell", path: "./setup/common.sh"
     node.vm.provision "shell", path: "./setup/control-plane.sh", args: "#{POD_CIDR} #{API_ADV_ADDRESS}"
+    node.vm.provision "shell", path: "./setup/setup-argo.sh"
   end
 
   (1..WORKER_COUNT).each do |i|

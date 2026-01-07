@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mlops-app-dev
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: "https://github.com/journeyofthesoul/mlops-primer.git"
+    targetRevision: develop
+    path: k8s
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: mlops-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

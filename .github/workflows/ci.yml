@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - "release/**"
+  pull_request:
+    branches:
+      - main # run on PRs targeting main
+      - "release/**" # run on PRs targeting any release branch
+
+jobs:
+  lint-python:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.14
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 black isort mypy
+
+      - name: Lint Python
+        run: |
+          flake8 ./train/train.py ./api/api.py ./train/data_sources/
+          black --check ./train/train.py ./api/api.py ./train/data_sources/
+          isort --check-only ./train/train.py ./api/api.py ./train/data_sources/
+          mypy ./train/train.py ./api/api.py ./train/data_sources/ --ignore-missing-imports
+
+  lint-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install hadolint
+        run: |
+          sudo wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64
+          sudo chmod +x /bin/hadolint
+
+      - name: Lint Dockerfiles
+        run: |
+          hadolint ./train/Dockerfile
+          hadolint ./api/Dockerfile
