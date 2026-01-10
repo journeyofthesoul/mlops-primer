@@ -25,7 +25,7 @@ spec:
           args:
             - mlflow
             - server
-            - --backend-store-uri=sqlite:///mlflow.db
+            - --backend-store-uri=sqlite:////mlflow/mlflow.db
             - --default-artifact-root=/mlflow
             - --host=0.0.0.0
             - --serve-artifacts
