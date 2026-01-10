@@ -2,10 +2,11 @@ import logging
 import os
 
 import joblib
-import pandas as pd
-import yfinance as yf
 import mlflow
 import mlflow.pyfunc
+import numpy as np
+import pandas as pd
+import yfinance as yf
 from fastapi import FastAPI, Query
 
 # -------------------------------------------------------------------
@@ -30,7 +31,7 @@ app = FastAPI(
 # -------------------------------------------------------------------
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
 MLFLOW_MODEL_NAME = os.getenv("MLFLOW_MODEL_NAME", "SPYDirectionModel")
-MLFLOW_MODEL_STAGE = os.getenv("MLFLOW_MODEL_STAGE", "Production")
+MODEL_VERSION = os.getenv("MODEL_VERSION", "latest")
 
 MODEL_PATH = os.getenv(
     "MODEL_PATH",
@@ -50,10 +51,10 @@ def load_model():
         try:
             mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
-            model_uri = f"models:/{MLFLOW_MODEL_NAME}/{MLFLOW_MODEL_STAGE}"
+            model_uri = f"models:/{MLFLOW_MODEL_NAME}/{MODEL_VERSION}"
             logger.info("Loading model from MLflow: %s", model_uri)
 
-            model = mlflow.pyfunc.load_model(model_uri)
+            model = mlflow.sklearn.load_model(model_uri)
 
             logger.info("Model loaded successfully from MLflow")
             return model
@@ -111,10 +112,24 @@ def predict(
 
     X = get_latest_features()
 
-    # pyfunc models always return pandas/numpy-friendly outputs
-    prob = float(model.predict(X)[0][1]) if hasattr(model, "predict_proba") else float(
-        model.predict(X)[0]
-    )
+    if hasattr(model, "predict_proba"):
+        proba = model.predict_proba(X)
+
+        # sklearn-style: shape (n_samples, n_classes)
+        prob = float(proba.iloc[0, 1] if isinstance(proba, pd.DataFrame) else proba[0][1])
+
+    else:
+        pred = model.predict(X)
+
+        # Handle pyfunc / sklearn / numpy scalar safely
+        if isinstance(pred, pd.DataFrame):
+            prob = float(pred.iloc[0, 0])
+        elif isinstance(pred, pd.Series):
+            prob = float(pred.iloc[0])
+        elif isinstance(pred, np.ndarray):
+            prob = float(pred[0])
+        else:
+            prob = float(pred)
 
     prediction = "UP" if prob > threshold else "DOWN"
 
