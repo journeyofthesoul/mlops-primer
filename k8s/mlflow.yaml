@@ -29,6 +29,7 @@ spec:
             - --default-artifact-root=/mlflow
             - --host=0.0.0.0
             - --serve-artifacts
+            - --allowed-hosts=mlflow-svc,mlflow-svc.mlops-dev
           resources:
             requests:
               cpu: 500m
