@@ -20,8 +20,47 @@ spec:
               volumeMounts:
                 - mountPath: /mnt/model
                   name: model-pv
+                - mountPath: /mlflow
+                  name: mlflow-pv
           restartPolicy: OnFailure
           volumes:
+            - name: mlflow-pv
+              persistentVolumeClaim:
+                claimName: mlflow-pvc
             - name: model-pv
               persistentVolumeClaim:
                 claimName: model-pvc
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ml-train-initial
+  labels:
+    app: ml-train
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: ml-train
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: ml-train
+          image: localhost/ml-train:latest
+          imagePullPolicy: Never
+          env:
+            - name: MLFLOW_TRACKING_URI
+              value: http://mlflow-svc:5000
+          volumeMounts:
+            - mountPath: /mlflow
+              name: mlflow-pv
+            - mountPath: /mnt/model
+              name: model-pv
+      volumes:
+        - name: mlflow-pv
+          persistentVolumeClaim:
+            claimName: mlflow-pvc
+        - name: model-pv
+          persistentVolumeClaim:
+            claimName: model-pvc
