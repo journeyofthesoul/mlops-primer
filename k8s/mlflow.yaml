@@ -29,7 +29,7 @@ spec:
             - --default-artifact-root=/mlflow
             - --host=0.0.0.0
             - --serve-artifacts
-            - --allowed-hosts=mlflow-svc:5000,mlflow-svc.mlops-dev:5000,localhost:5000
+            - --allowed-hosts=mlflow-svc:5000,mlflow-svc.mlops-dev:5000,localhost:5000,localhost
           resources:
             requests:
               cpu: 500m
