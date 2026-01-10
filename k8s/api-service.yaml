@@ -28,7 +28,12 @@ spec:
           volumeMounts:
             - mountPath: /mnt/model
               name: model-pv
+            - mountPath: /mlflow
+              name: mlflow-pv
       volumes:
+        - name: mlflow-pv
+          persistentVolumeClaim:
+            claimName: mlflow-pvc
         - name: model-pv
           persistentVolumeClaim:
             claimName: model-pvc
