@@ -3,3 +3,4 @@ numpy
 scikit-learn
 yfinance
 joblib
+mlflow==3.8.1

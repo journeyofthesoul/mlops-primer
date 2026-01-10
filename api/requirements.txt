@@ -5,3 +5,4 @@ yfinance
 joblib
 fastapi
 uvicorn
+mlflow==3.8.1
