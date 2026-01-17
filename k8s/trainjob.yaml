@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: ml-train
 spec:
-  schedule: "0 * * * *" # Runs every hour at minute 0
+  schedule: "*/5 * * * *" # Runs every 5 minutes
   jobTemplate:
     spec:
       template:
