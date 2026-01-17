@@ -23,10 +23,17 @@ spec:
           env:
             - name: MODEL_PATH
               value: /mnt/model/model.joblib
+            - name: MLFLOW_TRACKING_URI
+              value: http://mlflow-svc:5000
           volumeMounts:
             - mountPath: /mnt/model
               name: model-pv
+            - mountPath: /mlflow
+              name: mlflow-pv
       volumes:
+        - name: mlflow-pv
+          persistentVolumeClaim:
+            claimName: mlflow-pvc
         - name: model-pv
           persistentVolumeClaim:
             claimName: model-pvc

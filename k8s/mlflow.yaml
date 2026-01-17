@@ -18,14 +18,18 @@ spec:
           env:
             - name: MLFLOW_TRACKING_URI
               value: sqlite:///mlflow.db
+            - name: MLFLOW_SERVER_ENABLE_PROXY_FIX
+              value: "true"
           ports:
             - containerPort: 5000
           args:
             - mlflow
             - server
-            - --backend-store-uri=sqlite:///mlflow.db
+            - --backend-store-uri=sqlite:////mlflow/mlflow.db
             - --default-artifact-root=/mlflow
             - --host=0.0.0.0
+            - --serve-artifacts
+            - --allowed-hosts=mlflow-svc:5000,mlflow-svc.mlops-dev:5000,localhost:5000,localhost
           resources:
             requests:
               cpu: 500m
