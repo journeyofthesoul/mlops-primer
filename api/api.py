@@ -3,7 +3,6 @@ import os
 
 import joblib
 import mlflow
-import mlflow.pyfunc
 import numpy as np
 import pandas as pd
 import yfinance as yf
@@ -23,7 +22,7 @@ logger = logging.getLogger("ml-api")
 # -------------------------------------------------------------------
 app = FastAPI(
     title="Market Direction Prediction API",
-    version="1.0.0",
+    version="1.1.0",
 )
 
 # -------------------------------------------------------------------
@@ -31,7 +30,7 @@ app = FastAPI(
 # -------------------------------------------------------------------
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
 MLFLOW_MODEL_NAME = os.getenv("MLFLOW_MODEL_NAME", "SPYDirectionModel")
-MODEL_VERSION = os.getenv("MODEL_VERSION", "latest")
+MODEL_ALIAS = os.getenv("MODEL_ALIAS", "champion")
 
 MODEL_PATH = os.getenv(
     "MODEL_PATH",
@@ -51,15 +50,18 @@ def load_model():
         try:
             mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
-            model_uri = f"models:/{MLFLOW_MODEL_NAME}/{MODEL_VERSION}"
+            model_uri = f"models:/{MLFLOW_MODEL_NAME}@{MODEL_ALIAS}"
             logger.info("Loading model from MLflow: %s", model_uri)
 
-            model = mlflow.sklearn.load_model(model_uri)
+            model = mlflow.pyfunc.load_model(model_uri)
 
-            logger.info("Model loaded successfully from MLflow")
+            logger.info(
+                "Model loaded successfully from MLflow",
+                extra={"model_name": MLFLOW_MODEL_NAME, "alias": MODEL_ALIAS},
+            )
             return model
 
-        except Exception as e:
+        except Exception:
             logger.exception(
                 "Failed to load model from MLflow, falling back to local model"
             )
@@ -89,8 +91,6 @@ def get_latest_features() -> pd.DataFrame:
     latest = df.iloc[-1]
     feature_cols = ["return", "ma_5", "ma_20", "volatility_10"]
 
-    logger.debug("Latest features: %s", latest[feature_cols].to_dict())
-
     return pd.DataFrame([latest[feature_cols]])
 
 # -------------------------------------------------------------------
@@ -112,24 +112,17 @@ def predict(
 
     X = get_latest_features()
 
-    if hasattr(model, "predict_proba"):
-        proba = model.predict_proba(X)
+    # pyfunc-compatible inference
+    pred = model.predict(X)
 
-        # sklearn-style: shape (n_samples, n_classes)
-        prob = float(proba.iloc[0, 1] if isinstance(proba, pd.DataFrame) else proba[0][1])
-
+    if isinstance(pred, pd.DataFrame):
+        prob = float(pred.iloc[0, 0])
+    elif isinstance(pred, pd.Series):
+        prob = float(pred.iloc[0])
+    elif isinstance(pred, np.ndarray):
+        prob = float(pred[0])
     else:
-        pred = model.predict(X)
-
-        # Handle pyfunc / sklearn / numpy scalar safely
-        if isinstance(pred, pd.DataFrame):
-            prob = float(pred.iloc[0, 0])
-        elif isinstance(pred, pd.Series):
-            prob = float(pred.iloc[0])
-        elif isinstance(pred, np.ndarray):
-            prob = float(pred[0])
-        else:
-            prob = float(pred)
+        prob = float(pred)
 
     prediction = "UP" if prob > threshold else "DOWN"
 
@@ -139,6 +132,7 @@ def predict(
             "probability": prob,
             "threshold": threshold,
             "prediction": prediction,
+            "model_alias": MODEL_ALIAS,
         },
     )
 
@@ -147,4 +141,5 @@ def predict(
         "confidence": round(prob, 3),
         "threshold": threshold,
         "model_source": "mlflow" if USE_MLFLOW else "local",
+        "model_alias": MODEL_ALIAS,
     }
