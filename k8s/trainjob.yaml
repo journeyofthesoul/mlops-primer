@@ -17,7 +17,7 @@ spec:
                   value: /mnt/model/model.joblib
                 - name: MLFLOW_TRACKING_URI
                   value: http://mlflow-svc:5000
-                - name: JOB_START_TIME
+                - name: CLUSTER_CREATION_TIME
                   valueFrom:
                     configMapKeyRef:
                       name: simulation-clock

@@ -58,13 +58,13 @@ client = MlflowClient() if USE_MLFLOW else None
 # -------------------------------------------------------------------
 # Time anchor (historical replay)
 # -------------------------------------------------------------------
-# CronJob creation time (simulation epoch)
-cron_creation_raw = os.environ.get("CRONJOB_CREATION_TIME")
+# Cluster creation time (simulation epoch)
+cluster_creation_raw = os.environ.get("CLUSTER_CREATION_TIME")
 
 now = pd.Timestamp.utcnow()
 
-if cron_creation_raw:
-    simulation_start = pd.Timestamp(cron_creation_raw)
+if cluster_creation_raw:
+    simulation_start = pd.Timestamp(cluster_creation_raw)
 
     simulated_days = int(
         (now - simulation_start).total_seconds()
