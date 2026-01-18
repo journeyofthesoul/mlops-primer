@@ -46,8 +46,6 @@ os.makedirs(MODEL_DIR, exist_ok=True)
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
 USE_MLFLOW = bool(MLFLOW_TRACKING_URI)
 
-now = pd.Timestamp.utcnow()
-
 if USE_MLFLOW:
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
     mlflow.set_experiment(EXPERIMENT_NAME)
@@ -63,17 +61,24 @@ client = MlflowClient() if USE_MLFLOW else None
 # CronJob creation time (simulation epoch)
 cron_creation_raw = os.environ.get("CRONJOB_CREATION_TIME")
 
+now = pd.Timestamp.utcnow()
+
 if cron_creation_raw:
     simulation_start = pd.Timestamp(cron_creation_raw)
+
     simulated_days = int(
-        (now - simulation_start).total_seconds() // CRON_INTERVAL_SECONDS
+        (now - simulation_start).total_seconds()
+        // CRON_INTERVAL_SECONDS
     )
 else:
     # Local / single-run execution
+    simulation_start = now
     simulated_days = 0
 
 ANCHOR_DATETIME = (
-    now - timedelta(days=ANCHOR_OFFSET_DAYS) + timedelta(days=simulated_days)
+    simulation_start
+    - timedelta(days=ANCHOR_OFFSET_DAYS)
+    + timedelta(days=simulated_days)
 )
 
 train_end = ANCHOR_DATETIME
@@ -81,7 +86,13 @@ train_start = train_end - timedelta(days=TRAIN_WINDOW_DAYS)
 eval_start = train_end
 eval_end = train_end + timedelta(days=PREDICTION_WINDOW_DAYS)
 
-logger.info("Anchor time: %s", ANCHOR_DATETIME.isoformat())
+logger.info(
+    "Split Window | Now=%s | SimulationStart=%s | Anchor=%s | SimulatedDays=%d",
+    now.isoformat(),
+    simulation_start.isoformat(),
+    ANCHOR_DATETIME.isoformat(),
+    simulated_days,
+)
 
 # -------------------------------------------------------------------
 # Data loading

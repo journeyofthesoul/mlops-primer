@@ -18,6 +18,7 @@ kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "NodePort"}}'
 
 # 3. Setup ArgoCD Application w/ Destination Namespace
 kubectl create namespace mlops-dev || true
+kubectl create configmap simulation-clock -n mlops-dev --from-literal=SIMULATION_START_TIME="$(date -u +"%Y-%m-%dT%H:%M:%S.%6N+00:00")"
 kubectl apply -f /vagrant/argo/mlops-app.yaml
 
 # 4. Get NodePort and initial password
