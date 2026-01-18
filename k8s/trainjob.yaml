@@ -17,6 +17,10 @@ spec:
                   value: /mnt/model/model.joblib
                 - name: MLFLOW_TRACKING_URI
                   value: http://mlflow-svc:5000
+                - name: JOB_START_TIME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.creationTimestamp
               volumeMounts:
                 - mountPath: /mnt/model
                   name: model-pv
