@@ -114,9 +114,15 @@ EXPERIMENTS = [
 
 ### Model Evaluation
 
-Each trained model is evaluated on a strictly forward-looking evaluation window to simulate real-world performance in the same for-loop in which Training occurs. The model accuracy in the configured prediction window is compared with the known "champion"'s accuracy, enabling the pipeline to identify the best-performing candidate in a fully automated and repeatable manner. 
+Each trained model is evaluated on a strictly forward-looking evaluation window to simulate real-world performance. Training and evaluation occur within the same experiment loop, where predictions are made only on data that lies after the training period.  
+
+The resulting accuracy is compared against the currently registered champion model, allowing the pipeline to automatically identify and promote better-performing candidates in a fully repeatable and deterministic manner.  
 
 ### Serving the Model to end users (Inference) via API
+
+The inference service exposes a lightweight HTTP API (using FastAPI) that loads the currently promoted champion model from MLflow and serves real-time predictions. When run from within the kubernetes cluster, the model is pulled from the MLFlow service, and when run locally it is loaded from a local path.
+
+Instead of retraining or recalculating features at request time, the API focuses solely on model inference, keeping runtime latency low and system responsibilities clearly separated.
 
 ### Automation of Ingestion, Experimentation, Training and Evaluation using Python + k8s CronJob
 
