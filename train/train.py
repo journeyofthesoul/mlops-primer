@@ -8,7 +8,7 @@ import mlflow
 import mlflow.sklearn
 import pandas as pd
 from data_sources.yfinance_source import YFinanceDataSource
-from mlflow.data.pandas_dataset import PandasDataset
+from mlflow.data import from_pandas
 from mlflow.tracking import MlflowClient
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
@@ -107,18 +107,16 @@ if len(X_eval) < MIN_EVAL_SAMPLES:
     exit(0)
 
 # -------------------------------------------------------------------
-# MLflow Dataset definitions (lineage only, not artifacts)
+# MLflow Dataset definitions (lineage only)
 # -------------------------------------------------------------------
 if USE_MLFLOW:
-    train_dataset = PandasDataset(
-        df=train_df,
-        source=f"yfinance:{TICKER}",
+    train_dataset = from_pandas(
+        train_df,
         name="spy-training-window",
     )
 
-    eval_dataset = PandasDataset(
-        df=eval_df,
-        source=f"yfinance:{TICKER}",
+    eval_dataset = from_pandas(
+        eval_df,
         name="spy-evaluation-window",
     )
 
