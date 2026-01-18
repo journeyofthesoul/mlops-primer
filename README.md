@@ -1,11 +1,11 @@
 # MLOps Workflow Primer (Local Kubernetes w/ scikit-learn)
 
-This repository is a lightweight, end‑to‑end MLOps / ML‑workflow primer designed to run **entirely on a local machine** using Kubernetes running on Vagrant (VirtualBox). It is a small simulation environment that helps DevOps / SRE engineers learn the blocks of an ML Pipeline and get a introductory primer into what MLOps is. Having it run locally within the confines of one's personal laptop allows for free experimentation without fear of incurring cloud costs and having it run on Kubernetes on VMs gives it a close feel to a DevOps Engineer's playing field and allows for a peak into what infrastructure issues/concerns an MLOps infrastructure might encounter when deployed full-scale - again, without fear of incurring cloud costs.
+This repository is a lightweight, end‑to‑end MLOps / ML‑workflow primer designed to run **entirely on a local machine** using Kubernetes running on Vagrant (VirtualBox). It is a small simulation environment that helps DevOps / SRE engineers learn the blocks of an ML Pipeline and get a introductory primer into what MLOps is. Having it run locally within the confines of one's personal laptop allows for free experimentation without fear of incurring cloud costs and having it run on Kubernetes on VMs gives it a close feel to a DevOps Engineer's comfortable playing field and allows for a peak into what infrastructure issues/concerns an MLOps infrastructure might encounter when deployed full-scale - again, without fear of incurring cloud costs.
 
 As such, the goal is **not** model sophistication, but to demonstrate visually the following blocks of an ML Workflow/Pipeline as simple as possible:
 
 Machine Learning Pipeline
-* Data ingestion from an external source
+* [Data ingestion from an external source](https://github.com/journeyofthesoul/mlops-primer/edit/feature/implement-mlops/README.md#data-ingestion-from-an-external-source)
 * Feature Engineering
 * Model Training
 * Model Evaluation
@@ -19,7 +19,7 @@ MLOps Technology (using k8s and MLFlow)
 
 ## Service Description
 
-The API predicts whether the price for the SPDR S&P 500 ETF Trust (Ticker = SPY) would go up or down the following day. With a simple API call, you'll get one of two answers - UP or DOWN. Internally, the model is constantly trained on past data. I should stress, that the ML model used is arbitrary, something quick to set up and help the DevOps engineer see what the blocks of an ML Pipeline is. The goal is not model sophistication so the accuracy is pretty low.  
+The API predicts whether the price for the SPDR S&P 500 ETF Trust (Ticker = SPY) would go up or down the following day. With a simple API call, you'll get one of two answers - UP or DOWN. Internally, the model is constantly trained on past data. I should stress, that the ML model used is arbitrary, something quick to set up and help the DevOps engineer see what the blocks of an ML Pipeline is. <ins>The goal, as explained earlier, is not model sophistication so the accuracy is pretty low</ins>.  
 
 ## Setup Procedure
 
@@ -45,3 +45,13 @@ Or, to shut down the infrastructure temporarily (shut down the VMs):
 vagrant halt
 ```
 Either way, _vagrant up_ will bring back the entire infrastructure.
+
+### Data ingestion from an external source
+### Feature Engineering
+### Model Training
+### Model Evaluation
+### Serving the Model to end users (Inference) via API
+### Automation of Ingestion, Experimentation, Training and Evaluation using Python + k8s CronJob
+### Workflow for Model Promotion, Tagging, Aliasing
+### Model Persistence and Registry (allows for manual ops, rollbacks to older versions of the Model)
+### Experiment Tracking
