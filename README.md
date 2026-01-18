@@ -85,11 +85,24 @@ This process of creating new, meaningful inputs from existing data is known as _
 
 ### Model Training
 
-The training step builds a predictive model using historical data within a fixed time window, ensuring that only information available at that point in time is used. Multiple model configurations are trained automatically, allowing the system to explore different model complexities and parameters without manual intervention.  
+This project trains a binary classifier which predicts whether the price will go UP (1) or DOWN (0), rather than attempting to predict an exact future price. This makes the problem simpler, more stable, and easier to reason about.
+
+The machine learning algorithm used is Random Forest Classification.  At a high level, a model can be thought of as _Algorithm + Hyperparameters + Data_. Training is the process in which the algorithm learns internal rules (numerical coefficients, weights, configurations) from historical data or commonly known as training data (which has been enriched through feature engineering) in order to best match the known labels. The _hyperparameters_ control how complex the model is and how it learns from the data.
+
+Training in this project is implemented using _scikit-learn (sklearn)_, a widely used Python library for supervised machine learning. Sklearn provides reliable, well-tested implementations of algorithms such as Random Forests and is commonly used in tutorials you can easily find online.
+
+For each training run, the project evaluates a small set of predefined hyperparameter combinations. Each combination is treated as a separate _experiment_ and trained in a loop - each with its own set of hyperparameters. Two key hyperparameters - n_estimators, and max_depth, which control the complexity of the Random Forest model are varied for each experiment.
+```python
+EXPERIMENTS = [
+    {"n_estimators": 50, "max_depth": 3},
+    {"n_estimators": 100, "max_depth": 5},
+    {"n_estimators": 200, "max_depth": 8},
+]
+```
 
 ### Model Evaluation
 
-Each trained model is evaluated on a strictly forward-looking evaluation window to simulate real-world performance. Metrics from these evaluations are logged and compared, enabling the pipeline to identify the best-performing candidate in a fully automated and repeatable manner. This approach emphasizes reproducibility, controlled experimentation, and clear separation between training and evaluation.  
+Each trained model is evaluated on a strictly forward-looking evaluation window to simulate real-world performance in the same for-loop in which Training occurs. Metrics from these evaluations are logged and compared, enabling the pipeline to identify the best-performing candidate in a fully automated and repeatable manner. This approach emphasizes reproducibility, controlled experimentation, and clear separation between training and evaluation.  
 
 ### Serving the Model to end users (Inference) via API
 ### Automation of Ingestion, Experimentation, Training and Evaluation using Python + k8s CronJob
