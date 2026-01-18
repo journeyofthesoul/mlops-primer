@@ -114,7 +114,7 @@ EXPERIMENTS = [
 
 ### Model Evaluation
 
-Each trained model is evaluated on a strictly forward-looking evaluation window to simulate real-world performance in the same for-loop in which Training occurs. Metrics from these evaluations are logged and compared, enabling the pipeline to identify the best-performing candidate in a fully automated and repeatable manner. This approach emphasizes reproducibility, controlled experimentation, and clear separation between training and evaluation.
+Each trained model is evaluated on a strictly forward-looking evaluation window to simulate real-world performance in the same for-loop in which Training occurs. The model accuracy in the configured prediction window is compared with the known "champion"'s accuracy, enabling the pipeline to identify the best-performing candidate in a fully automated and repeatable manner. 
 
 ### Serving the Model to end users (Inference) via API
 
