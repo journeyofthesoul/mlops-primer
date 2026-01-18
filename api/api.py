@@ -93,6 +93,7 @@ def get_latest_features() -> pd.DataFrame:
 
     return pd.DataFrame([latest[feature_cols]])
 
+
 # -------------------------------------------------------------------
 # API endpoint
 # -------------------------------------------------------------------
