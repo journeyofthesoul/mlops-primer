@@ -8,6 +8,7 @@ import mlflow
 import mlflow.sklearn
 import pandas as pd
 from data_sources.yfinance_source import YFinanceDataSource
+from mlflow.data.pandas_dataset import PandasDataset
 from mlflow.tracking import MlflowClient
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
@@ -87,6 +88,7 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     df["target"] = (df["Close"].shift(-1) > df["Close"]).astype(int)
     return df.dropna()
 
+
 df = build_features(df)
 
 # -------------------------------------------------------------------
@@ -103,6 +105,22 @@ X_eval, y_eval = eval_df[feature_cols], eval_df["target"]
 if len(X_eval) < MIN_EVAL_SAMPLES:
     logger.warning("Evaluation window too small, skipping run")
     exit(0)
+
+# -------------------------------------------------------------------
+# MLflow Dataset definitions (lineage only, not artifacts)
+# -------------------------------------------------------------------
+if USE_MLFLOW:
+    train_dataset = PandasDataset(
+        df=train_df,
+        source=f"yfinance:{TICKER}",
+        name="spy-training-window",
+    )
+
+    eval_dataset = PandasDataset(
+        df=eval_df,
+        source=f"yfinance:{TICKER}",
+        name="spy-evaluation-window",
+    )
 
 # -------------------------------------------------------------------
 # Experiment grid
@@ -124,6 +142,7 @@ def get_champion_accuracy(model_name: str):
     except Exception:
         return None
 
+
 baseline_accuracy = get_champion_accuracy(REGISTERED_MODEL_NAME)
 
 if baseline_accuracy is None:
@@ -138,6 +157,11 @@ best_model, best_accuracy, best_params = None, -1.0, None
 
 for params in EXPERIMENTS:
     with mlflow.start_run(run_name=f"rf_{params}") if USE_MLFLOW else nullcontext():
+
+        if USE_MLFLOW:
+            mlflow.log_input(train_dataset, context="training")
+            mlflow.log_input(eval_dataset, context="evaluation")
+
         model = RandomForestClassifier(**params, random_state=42)
         model.fit(X_train, y_train)
 
@@ -147,13 +171,16 @@ for params in EXPERIMENTS:
         if USE_MLFLOW:
             mlflow.log_params(params)
             mlflow.log_metric("accuracy", acc)
-            mlflow.set_tags({
-                "anchor_time": ANCHOR_DATETIME.isoformat(),
-                "train_window_days": TRAIN_WINDOW_DAYS,
-                "prediction_window_days": PREDICTION_WINDOW_DAYS,
-                "evaluation_type": "offline",
-                "pipeline": "cronjob",
-            })
+            mlflow.set_tags(
+                {
+                    "anchor_time": ANCHOR_DATETIME.isoformat(),
+                    "train_window_days": TRAIN_WINDOW_DAYS,
+                    "prediction_window_days": PREDICTION_WINDOW_DAYS,
+                    "data_slice_type": "anchored_rolling_window",
+                    "evaluation_type": "offline",
+                    "pipeline": "cronjob",
+                }
+            )
 
         if acc > best_accuracy:
             best_model, best_accuracy, best_params = model, acc, params
@@ -162,8 +189,7 @@ for params in EXPERIMENTS:
 # Promotion decision
 # -------------------------------------------------------------------
 should_promote = (
-    baseline_accuracy is None
-    or best_accuracy > baseline_accuracy + PROMOTION_THRESHOLD
+    baseline_accuracy is None or best_accuracy > baseline_accuracy + PROMOTION_THRESHOLD
 )
 
 logger.info("Best accuracy=%.4f | Promote=%s", best_accuracy, should_promote)
@@ -182,23 +208,18 @@ if USE_MLFLOW and should_promote:
             registered_model_name=REGISTERED_MODEL_NAME,
         )
 
-        version = client.search_model_versions(
-            f"name='{REGISTERED_MODEL_NAME}'"
-        )[0].version
+        version = client.search_model_versions(f"name='{REGISTERED_MODEL_NAME}'")[
+            0
+        ].version
 
         # Tag the model version (environment & promotion reason)
-        client.set_model_version_tag(
-            REGISTERED_MODEL_NAME,
-            version,
-            "env",
-            "dev"
-        )
+        client.set_model_version_tag(REGISTERED_MODEL_NAME, version, "env", "dev")
 
         client.set_model_version_tag(
             REGISTERED_MODEL_NAME,
             version,
             "promotion_reason",
-            "bootstrap" if baseline_accuracy is None else "better_than_champion"
+            "bootstrap" if baseline_accuracy is None else "better_than_champion",
         )
 
         # Set alias (routing only)
