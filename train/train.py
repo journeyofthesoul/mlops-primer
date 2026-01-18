@@ -31,9 +31,9 @@ REGISTERED_MODEL_NAME = "SPYDirectionModel"
 CHAMPION_ALIAS = "champion"
 
 ANCHOR_OFFSET_DAYS = 365
-TRAIN_WINDOW_DAYS = 365
-PREDICTION_WINDOW_DAYS = 30
-MIN_EVAL_SAMPLES = 7
+TRAIN_WINDOW_DAYS = 30
+PREDICTION_WINDOW_DAYS = 7
+MIN_EVAL_SAMPLES = 3
 CRON_INTERVAL_SECONDS = 300  # 5 minutes
 
 PROMOTION_THRESHOLD = 0.01
@@ -100,9 +100,9 @@ df = df.sort_index()
 def build_features(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     df["return"] = df["Close"].pct_change()
+    df["ma_3"] = df["Close"].rolling(3).mean()
     df["ma_5"] = df["Close"].rolling(5).mean()
-    df["ma_20"] = df["Close"].rolling(20).mean()
-    df["volatility_10"] = df["return"].rolling(10).std()
+    df["volatility_3"] = df["return"].rolling(3).std()
     df["target"] = (df["Close"].shift(-1) > df["Close"]).astype(int)
     return df.dropna()
 
@@ -115,7 +115,7 @@ df = build_features(df)
 train_df = df.loc[train_start:train_end]
 eval_df = df.loc[eval_start:eval_end]
 
-feature_cols = ["return", "ma_5", "ma_20", "volatility_10"]
+feature_cols = ["return", "ma_3", "ma_5", "volatility_3"]
 
 X_train, y_train = train_df[feature_cols], train_df["target"]
 X_eval, y_eval = eval_df[feature_cols], eval_df["target"]
@@ -124,6 +124,20 @@ if len(X_eval) < MIN_EVAL_SAMPLES:
     logger.warning("Evaluation window too small, skipping run")
     exit(0)
 
+logger.info(
+    "TRAIN WINDOW | start=%s | end=%s | rows=%d",
+    train_df.index.min().isoformat(),
+    train_df.index.max().isoformat(),
+    len(train_df),
+)
+
+logger.info(
+    "EVAL  WINDOW | start=%s | end=%s | rows=%d",
+    eval_df.index.min().isoformat(),
+    eval_df.index.max().isoformat(),
+    len(eval_df),
+)
+
 # -------------------------------------------------------------------
 # MLflow Dataset definitions (lineage only)
 # -------------------------------------------------------------------
@@ -131,11 +145,21 @@ if USE_MLFLOW:
     train_dataset = from_pandas(
         train_df,
         name="spy-training-window",
+        tags={
+            "start": train_df.index.min().isoformat(),
+            "end": train_df.index.max().isoformat(),
+            "rows": str(len(train_df)),
+        }
     )
 
     eval_dataset = from_pandas(
         eval_df,
         name="spy-evaluation-window",
+        tags={
+            "start": eval_df.index.min().isoformat(),
+            "end": eval_df.index.max().isoformat(),
+            "rows": str(len(eval_df)),
+        }
     )
 
 # -------------------------------------------------------------------
@@ -195,6 +219,12 @@ for params in EXPERIMENTS:
                     "data_slice_type": "anchored_rolling_window",
                     "evaluation_type": "offline",
                     "pipeline": "cronjob",
+                    "train_start": train_df.index.min().isoformat(),
+                    "train_end": train_df.index.max().isoformat(),
+                    "eval_start": eval_df.index.min().isoformat(),
+                    "eval_end": eval_df.index.max().isoformat(),
+                    "train_rows": len(train_df),
+                    "eval_rows": len(eval_df),
                 }
             )
 
