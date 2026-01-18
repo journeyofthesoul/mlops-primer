@@ -144,22 +144,12 @@ logger.info(
 if USE_MLFLOW:
     train_dataset = from_pandas(
         train_df,
-        name="spy-training-window",
-        tags={
-            "start": train_df.index.min().isoformat(),
-            "end": train_df.index.max().isoformat(),
-            "rows": str(len(train_df)),
-        }
+        name="spy-training-window"
     )
 
     eval_dataset = from_pandas(
         eval_df,
-        name="spy-evaluation-window",
-        tags={
-            "start": eval_df.index.min().isoformat(),
-            "end": eval_df.index.max().isoformat(),
-            "rows": str(len(eval_df)),
-        }
+        name="spy-evaluation-window"
     )
 
 # -------------------------------------------------------------------
