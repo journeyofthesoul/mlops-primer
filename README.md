@@ -128,6 +128,41 @@ Instead of retraining or recalculating features at request time, the API focuses
 
 ### Workflow for Model Promotion, Tagging, Aliasing
 
+This project uses the **MLflow Model Registry** to manage the full lifecycle of trained models in an automated, traceable, and reproducible way. Instead of manually selecting which model should be deployed, the system relies on performance-based promotion driven entirely by evaluation metrics. All trained models are registered under a single registered model name _SPYDirectionModel_.
+
+Each training run may produce a new model version, representing a specific training data slice each with its own set of hyperparameters, features, and data window.
+
+All historical versions are preserved, allowing full experiment traceability and reproducibility.
+
+The pipeline follows a champion–challenger pattern. The currently active model is referenced using the alias _@champion_. Newly trained models act as challengers.
+
+During each automated training cycle:
+
+1. The accuracy of the current champion model is retrieved from MLflow.
+2. Multiple candidate models are trained with different hyperparameters.
+3. Each candidate is evaluated on a strictly forward-looking evaluation window.
+4. The best-performing candidate is selected.
+5. If its accuracy exceeds the champion by a configurable threshold, it is promoted.
+
+This ensures that only demonstrably better models replace the current champion.
+
+When a model version is registered, metadata is attached using MLflow tags.
+
+Typical tags include:
+
+- `env`: deployment environment (e.g. `dev`)
+- `promotion_reason`: reason for promotion (`bootstrap`, `better_than_champion`)
+- `anchor_time`: simulated historical time used for training
+- `train_window_days`: size of the training window
+- `prediction_window_days`: size of the evaluation window
+
+These tags provide:
+
+- Clear model lineage
+- Easier debugging
+- Transparent promotion logic
+- Improved observability in the MLflow UI
+
 ### Model Persistence and Registry (allows for manual ops, rollbacks to older versions of the Model)
 
 ### Experiment Tracking
