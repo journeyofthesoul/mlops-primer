@@ -48,10 +48,49 @@ Either way, _vagrant up_ will bring back the entire infrastructure.
 
 ---
 
+## Descriptions for each blocks
+
+This section focuses on high-level descriptions for each of the ML / MLOps blocks the projects includes.
+
 ### Data ingestion from an external source
+
+Historical daily market data is retrieved from Yahoo Finance using a dedicated data source abstraction (for future extensibility). Right now, it's fixed to get data for one ticker (SPY).  
+
+You may notice that the pipeline trains models using data anchored to a point in the past (one year prior to the current run). The original intention of this project was to operate on a daily cadence: ingesting new market data each day, retraining the model with the most recent observations, and generating predictions for the following day.
+
+In practice, this would require the system to run continuously over many days before meaningful model history and experiment tracking could be observed. For the purposes of demonstrating the full machine learning workflow—data loading, feature engineering, training, evaluation, and model versioning—this repository compresses the time scale.
+
+Specifically, a 5-minute cadence is used to simulate a daily training loop. Each run treats the current execution time as a new “day,” pulls data relative to a historical anchor, retrains the model, and evaluates it on a forward-looking window. This allows multiple model versions, evaluations, and promotions to be generated within a short period of time, making the end-to-end pipeline behavior visible without requiring long-running execution.
+
+Conceptually, this mirrors how a real production system would operate on a daily schedule—only accelerated for demonstration and experimentation purposes.
+
 ### Feature Engineering
+
+Feature engineering transforms the raw daily price data into a feature set suitable for the algorithm (model) to learn patterns from and perform predictions.
+
+The following features are added to the data using rolling windows:
+- **Daily returns**: capture short-term momentum
+- **Moving averages (5, 20 days)**: represent trend direction across multiple time scales
+- **Rolling volatility (10 days)**: encode recent market uncertainty
+
+The use of these features for stock market prediction is common as seen in articles online:  
+https://www.kaggle.com/code/adityasingh01676/stock-price-prediction-random-forest-regression/notebook
+https://medium.datadriveninvestor.com/forecasting-real-time-market-volatility-using-python-282e78b61022
+
+Intuitively, it is easy to see that predicting future market behavior should not rely on past prices alone. Market movements are also influenced by broader trends, which moving averages help capture, as well as by volatility, which reflects how stable or unpredictable recent price movements have been.  
+
+At this stage, the exact choice of window sizes (such as 5, 10, or 20 days) is not critical. The important idea is that this step of the ML pipeline enriches the raw price data by deriving additional fields that summarize recent behavior. These derived signals provide more informative inputs for the machine learning model to learn patterns from.  
+
+This process of creating new, meaningful inputs from existing data is known as _Feature Engineering_.  
+
 ### Model Training
+
+The training step builds a predictive model using historical data within a fixed time window, ensuring that only information available at that point in time is used. Multiple model configurations are trained automatically, allowing the system to explore different model complexities and parameters without manual intervention.  
+
 ### Model Evaluation
+
+Each trained model is evaluated on a strictly forward-looking evaluation window to simulate real-world performance. Metrics from these evaluations are logged and compared, enabling the pipeline to identify the best-performing candidate in a fully automated and repeatable manner. This approach emphasizes reproducibility, controlled experimentation, and clear separation between training and evaluation.  
+
 ### Serving the Model to end users (Inference) via API
 ### Automation of Ingestion, Experimentation, Training and Evaluation using Python + k8s CronJob
 ### Workflow for Model Promotion, Tagging, Aliasing
