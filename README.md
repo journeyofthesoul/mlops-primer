@@ -15,17 +15,13 @@ MLOps Technology (using k8s and MLFlow)
 * Automation of Ingestion, Experimentation, Training and Evaluation using Python + k8s CronJob
 * Workflow for Model Promotion, Tagging, Aliasing
 * Model Persistence and Registry (allows for manual ops, rollbacks to older versions of the Model)
-* Experiment Tracking
+* Experiment Tracking  
 
----
+## Service Description
 
-## What does the service do ?
+The API predicts whether the price for the SPDR S&P 500 ETF Trust (Ticker = SPY) would go up or down the following day. With a simple API call, you'll get one of two answers - UP or DOWN. Internally, the model is constantly trained on past data. I should stress, that the ML model used is arbitrary, something quick to set up and help the DevOps engineer see what the blocks of an ML Pipeline is. The goal is not model sophistication so the accuracy is pretty low.  
 
-The API predicts whether the price for the SPDR S&P 500 ETF Trust (Ticker = SPY) would go up or down the following day. With a simple API call, you'll get one of two answers - UP or DOWN. Internally, the model is constantly trained on past data. I should stress, that the ML model used is arbitrary, something quick to set up and help the DevOps engineer see what the blocks of an ML Pipeline is. The goal is not model sophistication so the accuracy is pretty low.
-
----
-
-## How to setup
+## Setup Procedure
 
 The command below will set up everything - the entire kubernetes cluster, the jobs, services, mlflow, and bring the API up. Boot-up time still needs to be improved, but everything should be ready 15 minutes after (usually shorter).
 ```bash
