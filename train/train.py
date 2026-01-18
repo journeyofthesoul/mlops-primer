@@ -197,6 +197,11 @@ logger.info("Best accuracy=%.4f | Promote=%s", best_accuracy, should_promote)
 # -------------------------------------------------------------------
 if USE_MLFLOW and should_promote:
     with mlflow.start_run(run_name=f"PROMOTION_{ANCHOR_DATETIME:%Y%m%d_%H%M}"):
+
+        if USE_MLFLOW:
+            mlflow.log_input(train_dataset, context="training")
+            mlflow.log_input(eval_dataset, context="evaluation")
+
         mlflow.log_params(best_params)
         mlflow.log_metric("accuracy", best_accuracy)
 
