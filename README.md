@@ -171,5 +171,23 @@ These tags provide:
 
 ## Demo
 
-Here are some shots showcasing how the software looks like when run. Once the system is up and running, you should be able to access it from the browser.
-![mlops-primer-browser.png](https://github.com/journeyofthesoul/mlops-primer/blob/feature/implement-mlops/docs/images/mlops-primer-browser.png)
+Here are some shots showcasing how the software looks like when run.  
+
+Once the system is up and running, you should be able to access it from the browser via a simple GET request.
+![mlops-primer-browser.png](https://github.com/journeyofthesoul/mlops-primer/blob/feature/implement-mlops/docs/images/mlops-primer-browser.png) <br><br>
+What is more interesting will be to look at the MLFlow UI to confirm that the ongoing periodic training really happens, in-line with the promotion and tagging workflow. A simple port-forward in Kubernetes to port 5000 exposes the MLFlow service to localhost.  
+![mlops-primer-browser.png](https://github.com/journeyofthesoul/mlops-primer/blob/feature/implement-mlops/docs/images/mlflow-ui.png)  
+<br><br>
+You can see all of the experiment runs from the _Runs_ tab. And if you sort out by name, you will find two with the names prefixed in **PROMOTION**. 
+![experiment-runs.png](https://github.com/journeyofthesoul/mlops-primer/blob/feature/implement-mlops/docs/images/experiment-runs.png)   
+<br><br>
+The first of these is the bootstrap model. When the infrastructure was first brought up, no initial model exists. Hence, the first model trained is automatically promoted and aliased with _champion_. The second one simply beat the first one in accuracy which then triggered a PROMOTION run. You also notice that the these two PROMOTION runs are 1 hour and 30 minutes apart. In between, multiple runs (batches of 3-per hyperparameter set) each executed every 5 mins, each shifting the Training+Evaluation Window by 1 day.  
+<br><br>
+It took almost 15 runs before we get a model that beats the accuracy of the bootstrap model !!  
+<br><br>
+Let's look at each of the runs to see the accuracy. You can do so by clicking on the run. For the bootstrap run we see it has an accuracy of **0.5**:  
+![bootstrap-model.png](https://github.com/journeyofthesoul/mlops-primer/blob/feature/implement-mlops/docs/images/bootstrap-model.png)  
+<br><br>
+And for the other promoted model we got a whopping accuracy of **0.6** !! - Better than pure coin-flipping chance. This confirms our workflow of automatically promoting those that achieve a higher accuracy in our local environment.   
+![new-champion-model.png](https://github.com/journeyofthesoul/mlops-primer/blob/feature/implement-mlops/docs/images/new-champion-model.png)  
+<br><br>
