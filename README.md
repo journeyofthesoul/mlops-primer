@@ -172,4 +172,4 @@ These tags provide:
 ## Demo
 
 Here are some shots showcasing how the software looks like when run. Once the system is up and running, you should be able to access it from the browser.
-![mlops-primer-browser.png]([relative/path/to/your/image.png](https://github.com/journeyofthesoul/mlops-primer/blob/feature/implement-mlops/docs/images/mlops-primer-browser.png))
+![mlops-primer-browser.png](https://github.com/journeyofthesoul/mlops-primer/blob/feature/implement-mlops/docs/images/mlops-primer-browser.png)
