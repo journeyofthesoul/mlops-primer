@@ -183,7 +183,7 @@ You can see all of the experiment runs from the _Runs_ tab. And if you sort out 
 <br><br>
 The first of these is the bootstrap model. When the infrastructure was first brought up, no initial model exists. Hence, the first model trained is automatically promoted and aliased with _champion_. The second one simply beat the first one in accuracy which then triggered a PROMOTION run. You also notice that the these two PROMOTION runs are 1 hour and 30 minutes apart. In between, multiple runs (batches of 3-per hyperparameter set) each executed every 5 mins, each shifting the Training+Evaluation Window by 1 day. From what we understand, **none of these runs** resulted to a trained model that evaluated to a better performance (measured in accuracy) than that of the bootstrap model. This is something we will show below.    
 <br><br>
-Just would like to put that it took almost 15 runs before we get a model that beats the accuracy of the bootstrap model.  
+:rocket: Just would like to put emphasize it took almost 15 runs before we get a model that beats the accuracy of the bootstrap model!! :rocket:    
 <br><br>
 Let's look at each of the runs to see the accuracy. You can do so by clicking on the run. For the bootstrap run we see it has an accuracy of **0.5**:  
 ![bootstrap-model.png](https://github.com/journeyofthesoul/mlops-primer/blob/feature/implement-mlops/docs/images/bootstrap-model.png)  
