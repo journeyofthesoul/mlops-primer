@@ -188,7 +188,7 @@ It took almost 15 runs before we get a model that beats the accuracy of the boot
 Let's look at each of the runs to see the accuracy. You can do so by clicking on the run. For the bootstrap run we see it has an accuracy of **0.5**:  
 ![bootstrap-model.png](https://github.com/journeyofthesoul/mlops-primer/blob/feature/implement-mlops/docs/images/bootstrap-model.png)  
 <br><br>
-And for the other promoted model we got a whopping accuracy of **0.6** !! - Better than pure coin-flipping chance. This confirms our workflow of automatically promoting those that achieve a higher accuracy in our local environment. Are you willing to trust this tool ???:laughing:     
+And for the other promoted model we got a whopping accuracy of **0.6** !! - Better than pure coin-flipping chance. This confirms our workflow of automatically promoting those that achieve a higher accuracy in our local environment. Are you willing to trust this tool ??? :laughing:     
 ![new-champion-model.png](https://github.com/journeyofthesoul/mlops-primer/blob/feature/implement-mlops/docs/images/new-champion-model.png)  
 <br><br>
 Likewise, we can take a look at non-promoted runs and confirm that they do result to an accuracy less than the current champion at the time. (**0.2** in the case of this example)  
