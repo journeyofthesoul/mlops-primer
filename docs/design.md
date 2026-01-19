@@ -60,7 +60,7 @@ The data is retrieved **inside the training container at job execution time**, e
 
 The goal of the training job is intentionally simple:
 
-> Learn a relationship from historical price data and produce a model capable of making a **short‑horizon numerical prediction** (e.g. a next‑day value).
+> Learn a relationship from historical price data and produce a model capable of predicting **next‑day price direction** (binary classification: UP or DOWN).
 
 This is **not** intended to be a production‑grade financial model.
 The emphasis is on **workflow mechanics**, not predictive performance.
@@ -89,7 +89,7 @@ All feature logic lives entirely inside the training container, keeping the job 
 ### Model training
 
 - Framework: **scikit‑learn**
-- Model: a lightweight regression model
+- Model: a lightweight binary classification model (RandomForestClassifier)
 
 The model is chosen to be:
 
