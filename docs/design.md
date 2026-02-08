@@ -89,7 +89,7 @@ All feature logic lives entirely inside the training container, keeping the job 
 ### Model training
 
 - Framework: **scikit‑learn**
-- Model: a lightweight regression model
+- Model: a lightweight binary classification model (RandomForestClassifier)
 
 The model is chosen to be:
 
