@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: ml-train
 spec:
-  schedule: "0 * * * *" # Runs every hour at minute 0
+  schedule: "*/5 * * * *" # Runs every 5 minutes
   jobTemplate:
     spec:
       template:
@@ -17,6 +17,11 @@ spec:
                   value: /mnt/model/model.joblib
                 - name: MLFLOW_TRACKING_URI
                   value: http://mlflow-svc:5000
+                - name: CLUSTER_CREATION_TIME
+                  valueFrom:
+                    configMapKeyRef:
+                      name: simulation-clock
+                      key: SIMULATION_START_TIME # "2026-01-18T09:57:59.462940+00:00"
               volumeMounts:
                 - mountPath: /mnt/model
                   name: model-pv

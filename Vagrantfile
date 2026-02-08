@@ -34,8 +34,8 @@ Vagrant.configure("2") do |config|
       node.vm.hostname = "kube-worker-#{i}"
       node.vm.network :private_network, ip: "192.168.56.#{i + 20}"
       node.vm.provider "virtualbox" do |vb|
-        vb.memory = 2048
-        vb.cpus   = 2
+        vb.memory = 4096
+        vb.cpus   = 3
       end
       node.vm.provision "shell", path: "./setup/common.sh"
       node.vm.provision "shell", path: "./setup/worker.sh", args: "#{i}"
