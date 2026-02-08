@@ -1,431 +1,196 @@
 # MLOps Workflow Primer (Local Kubernetes w/ scikit-learn)
 
-This repository is a **small, end‑to‑end MLOps / ML‑workflow primer** designed to run **entirely on a local machine** using **Vagrant + Kubernetes (containerd)**.
+This repository is a lightweight, end‑to‑end MLOps / ML‑workflow primer designed to run **entirely on a local machine** using Kubernetes running on Vagrant (VirtualBox). It is a small simulation environment that helps DevOps / SRE engineers learn the blocks of an ML Pipeline and get a introductory primer into what MLOps is. Having it run locally within the confines of one's personal laptop allows for free experimentation without fear of incurring cloud costs and having it run on Kubernetes on VMs gives it a close feel to a DevOps Engineer's comfortable playing field and allows for a peak into what infrastructure issues/concerns an MLOps infrastructure might encounter when deployed full-scale - again, without fear of incurring cloud costs.
 
-The goal is **not** model sophistication, but to demonstrate **core ML workflow fundamentals**:
+As such, the goal is **not** model sophistication, but to demonstrate visually the following blocks of an ML Workflow/Pipeline as simple as possible:
 
-* Data ingestion from an external source
-* Batch training as a Kubernetes Job
-* Persisted model artifacts
-* Online inference via an API
-* Separation of training and serving concerns
-* Reproducible, infrastructure‑aware setup
+Machine Learning Pipeline
 
-This project is intentionally kept small, explicit, and readable.
+- [Data ingestion from an external source](https://github.com/journeyofthesoul/mlops-primer/tree/feature/implement-mlops?tab=readme-ov-file#data-ingestion-from-an-external-source)
+- [Feature Engineering](https://github.com/journeyofthesoul/mlops-primer/tree/feature/implement-mlops?tab=readme-ov-file#feature-engineering)
+- [Model Training](https://github.com/journeyofthesoul/mlops-primer/tree/feature/implement-mlops?tab=readme-ov-file#model-training)
+- [Model Evaluation](https://github.com/journeyofthesoul/mlops-primer/tree/feature/implement-mlops?tab=readme-ov-file#model-evaluation)
+- [Serving the Model to end users (Inference) via API](https://github.com/journeyofthesoul/mlops-primer/tree/feature/implement-mlops?tab=readme-ov-file#serving-the-model-to-end-users-inference-via-api)
 
----
+MLOps Technology (using k8s and MLFlow)
 
-## Project Rationale
-This project is a learning/simulation environment made for DevOps / Platform / Site-Reliability Engineers wanting to transition to MLOps. 
+- [Automation of Ingestion, Experimentation, Training and Evaluation using Python + k8s CronJob](https://github.com/journeyofthesoul/mlops-primer/tree/feature/implement-mlops?tab=readme-ov-file#automation-of-ingestion-experimentation-training-and-evaluation-using-python--k8s-cronjob)
+- [Workflow for Model Promotion, Tagging, Aliasing](https://github.com/journeyofthesoul/mlops-primer/tree/feature/implement-mlops?tab=readme-ov-file#workflow-for-model-promotion-tagging-aliasing)
+- [Model Persistence and Registry (allows for manual ops, rollbacks to older versions of the Model)](https://github.com/journeyofthesoul/mlops-primer/tree/feature/implement-mlops?tab=readme-ov-file#model-persistence-and-registry-allows-for-manual-ops-rollbacks-to-older-versions-of-the-model)
+- [Experiment Tracking](https://github.com/journeyofthesoul/mlops-primer/tree/feature/implement-mlops?tab=readme-ov-file#experiment-tracking)
 
-This project exists to:
+## Service Description
 
-> Demonstrate **ML workflow fundamentals** in a way that is
-> local, inspectable, reproducible, and infrastructure‑aware.
+The API predicts whether the price for the SPDR S&P 500 ETF Trust (Ticker = SPY) would go up or down the following day. With a simple API call, you'll get one of two answers - UP or DOWN. Internally, the model is constantly trained on past data. I should stress, that the ML model used is arbitrary, something quick to set up and help the DevOps engineer see what the blocks of an ML Pipeline is. <ins>The goal, as explained earlier, is not model sophistication so the accuracy is pretty low</ins>.
 
-It is designed to be read, modified, and extended — not treated as a black box. As such, the following design considerations were intentionally made:
+## Setup Procedure
 
-* **No public image registry**
-
-  * Images are built locally and imported directly into containerd.
-  * Reflects on‑prem / restricted environments
-
-* **Simple model**
-
-  * Focus is workflow, not on the model accuracy & sophistication
-  * MLOps is a separate discipline to Data Scientists, Machine Learning Engineers so intend to highlight automation and workflows, and not the python source code
-
-* **Explicit scripts & manifests**
-
-  * Avoids magic abstractions
-  * Easy to reason about for learning purposes
-
----
-
-## Training workflow
-
-### Data source
-
-The training workflow uses **public financial time‑series data** fetched at runtime via the `yfinance` library.
-
-* Data type: historical price data (e.g. open / close / volume)
-* Source: Yahoo Finance (via yfinance)
-* Scope: a single financial instrument over a recent time window
-
-The data is retrieved **inside the training container at job execution time**, ensuring:
-
-* no bundled datasets
-* no manual data downloads
-* a realistic external‑data dependency
-
----
-
-### Training objective
-
-The goal of the training job is intentionally simple:
-
-> Learn a relationship from historical price data and produce a model capable of making a **short‑horizon numerical prediction** (e.g. a next‑day value).
-
-This is **not** intended to be a production‑grade financial model.
-The emphasis is on **workflow mechanics**, not predictive performance.
-
----
-
-### Feature preparation
-
-At a high level, the training job:
-
-1. Downloads historical time‑series data
-2. Extracts basic numerical features from the data
-
-   * recent prices
-   * simple derived values (e.g. rolling statistics)
-3. Constructs a supervised learning dataset
-
-   * features derived from past values
-   * target representing a future value
-
-All feature logic lives entirely inside the training container, keeping the job self‑contained.
-
----
-
-### Model training
-
-* Framework: **scikit‑learn**
-* Model: a lightweight regression model
-
-The model is chosen to be:
-
-* fast to train
-* deterministic
-* easy to serialize and reload
-
-This keeps training times short and makes the workflow easy to inspect.
-
----
-
-### Model artifact
-
-After training completes:
-
-* The trained model is serialized to disk
-* The artifact is written to a shared location
-* No model state is kept in memory after job completion
-
-This mirrors a common production pattern:
-
-> **Training produces artifacts; serving consumes artifacts**
-
----
-
-### Why this workflow
-
-This training pipeline is intentionally minimal, but demonstrates key ML workflow concepts:
-
-* Batch training as a Kubernetes Job
-* External data dependency at runtime
-* Clear separation of training and inference
-* Artifact‑based handoff between components
-
-The simplicity makes it easy to extend later with:
-
-* scheduled retraining (CronJob)
-* experiment tracking (e.g. MLflow)
-* model versioning
-
----
-
-## Prerequisites
-
-On the host machine:
-
-* Docker
-* Vagrant
-* VirtualBox
-* kubectl
-
-> Docker is **only required on the host** to build images.
-> The Kubernetes nodes use **containerd**, not Docker.
-
----
-
-## One‑command setup
-
-From the repository root:
+The command below will set up everything - the entire kubernetes cluster, the jobs, services, mlflow, and bring the API up. Boot-up time still needs to be improved, but everything should be ready 15 minutes after (usually shorter).
 
 ```bash
 vagrant up
 ```
 
-This will:
-
-1. Provision a local Kubernetes cluster
-2. Build ML images on the host
-3. Import images into containerd on each node
-4. Initialize Kubernetes components
-
-Cluster access config will be generated locally.
-
-**YES** - I'm a stickler for automation. I do not want to burden developers with needing to run a multitude of scripts or setup commands to use my tools.
-
----
-
-## What this project demonstrates (TODO)
-
-**ML workflow concepts**:
-
-* Periodic / batch training (job‑style ML)
-* Feature extraction & model fitting with scikit‑learn
-* Artifact generation (trained model)
-* Stateless inference service loading a model
-
-**Platform / MLOps concepts**:
-
-* Kubernetes Jobs vs long‑running Services
-* Containerized ML workloads
-* Image usage with `containerd` (no Docker inside the cluster)
-* Local, reproducible Kubernetes via Vagrant
-* Offline / air‑gapped‑friendly workflows (no registry push required)
-
----
-
-## Architecture overview (TODO)
-
-High‑level flow:
-
-```
-Data Source (yfinance)
-        ↓
-Training Job (scikit‑learn)
-        ↓
-Model Artifact (saved to volume)
-        ↓
-Inference API (FastAPI)
-        ↓
-HTTP Prediction Endpoint
-```
-
-Key idea:
-
-* **Training** is a *batch* concern → Kubernetes `Job`
-* **Inference** is a *serving* concern → Kubernetes `Deployment + Service`
-
----
-
-## Repository structure (TODO)
-
-```
-.
-├── api/                  # Inference service (FastAPI)
-│   ├── app.py
-│   ├── Dockerfile
-│   └── requirements.txt
-│
-├── train/                # Training job (scikit‑learn)
-│   ├── train.py
-│   ├── Dockerfile
-│   └── requirements.txt
-│
-├── k8s/                  # Kubernetes manifests
-│   ├── train-job.yaml
-│   ├── api-deployment.yaml
-│   └── api-service.yaml
-│
-├── setup/                # Host-side helper scripts
-│   └── build.sh
-│
-├── Vagrantfile           # Local Kubernetes cluster definition
-└── README.md
-```
-
----
-
-## Deploying the ML workloads (Mental MAP - not yet implemented)
-
-### 1. Run the training job (TODO)
+To call the API serving the model, run the following curl command (with or without the threshold query parameter):
 
 ```bash
-kubectl apply -f k8s/train-job.yaml
+% curl http://192.168.56.21:30951/predictionForTomorrow
+{"prediction":"DOWN","confidence":0.0,"threshold":0.5,"model_source":"mlflow","model_alias":"champion"}
+% curl "http://192.168.56.21:30951/predictionForTomorrow?threshold=0.3"
+{"prediction":"DOWN","confidence":0.0,"threshold":0.3,"model_source":"mlflow","model_alias":"champion"}
 ```
 
-Check status:
+Note: The IP of 192.168.56.21 is fixed, for a one worker node cluster (with one control plane node) which is configured by default in the _Vagrantfile_. Likewise, the port of 30951 had also been configured fixed as the Service NodePort. If you download this repo AsIs and run _vagrant up_, none of these parameters need to be changed.
+
+To bring the service down:
 
 ```bash
-kubectl get jobs
-kubectl logs job/ml-train
+vagrant destroy
 ```
 
-This job:
-
-* Pulls financial time‑series data
-* Trains a simple scikit‑learn model
-* Saves the model artifact
-
----
-
-### 2. Deploy the inference API (TODO)
+Or, to shut down the infrastructure temporarily (shut down the VMs):
 
 ```bash
-kubectl apply -f k8s/api-deployment.yaml
-kubectl apply -f k8s/api-service.yaml
+vagrant halt
 ```
 
-Check status:
-
-```bash
-kubectl get pods
-kubectl get svc
-```
+Either way, _vagrant up_ will bring back the entire infrastructure.
 
 ---
 
-### 3. Query the API (TODO)
+## Descriptions for each blocks
 
-Example request:
+This section focuses on high-level descriptions for each of the ML / MLOps blocks the projects includes.
 
-```bash
-curl http://<node-ip>:<node-port>/predictionForTomorrow
+### Data ingestion from an external source
+
+Historical daily market data is retrieved from Yahoo Finance using a dedicated data source abstraction (for future extensibility). Right now, it's fixed to get data for one ticker (SPY).
+
+You may notice that the pipeline trains models using data anchored to a point in the past (one year prior to the current run). The original intention of this project was to operate on a daily cadence: ingesting new market data each day, retraining the model with the most recent observations, and generating predictions for the following day.
+
+In practice, this would require the system to run continuously over many days before meaningful model history and experiment tracking could be observed. For the purposes of demonstrating the full machine learning workflow—data loading, feature engineering, training, evaluation, and model versioning—this repository compresses the time scale.
+
+Specifically, a 5-minute cadence is used to simulate a daily training loop. Each run treats the current execution time as a new “day,” pulls data relative to a historical anchor, retrains the model, and evaluates it on a forward-looking window. This allows multiple model versions, evaluations, and promotions to be generated within a short period of time, making the end-to-end pipeline behavior visible without requiring long-running execution.
+
+Conceptually, this mirrors how a real production system would operate on a daily schedule—only accelerated for demonstration and experimentation purposes.
+
+### Feature Engineering
+
+Feature engineering transforms the raw daily price data into a feature set suitable for the algorithm (model) to learn patterns from and perform predictions.
+
+The following features are added to the data using rolling windows:
+
+- **Daily returns**: capture short-term momentum
+- **Moving averages (3, 5 days)**: represent trend direction across multiple time scales
+- **Rolling volatility (3 days)**: encode recent market uncertainty
+
+The use of these features for stock market prediction is common as seen in articles online:  
+https://www.kaggle.com/code/adityasingh01676/stock-price-prediction-random-forest-regression/notebook
+https://medium.datadriveninvestor.com/forecasting-real-time-market-volatility-using-python-282e78b61022
+
+Intuitively, it is easy to see that predicting future market behavior should not rely on past prices alone. Market movements are also influenced by broader trends, which moving averages help capture, as well as by volatility, which reflects how stable or unpredictable recent price movements have been.
+
+At this stage, the exact choice of window sizes (such as 5, 10, or 20 days) is not critical. The important idea is that this step of the ML pipeline enriches the raw price data by deriving additional fields that summarize recent behavior. These derived signals provide more informative inputs for the machine learning model to learn patterns from.
+
+This process of creating new, meaningful inputs from existing data is known as _Feature Engineering_.
+
+### Model Training
+
+This project trains a binary classifier which predicts whether the price will go UP (1) or DOWN (0), rather than attempting to predict an exact future price. This makes the problem simpler, more stable, and easier to reason about.
+
+The machine learning algorithm used is Random Forest Classification. At a high level, a model can be thought of as _Algorithm + Hyperparameters + Data_. Training is the process in which the algorithm learns internal rules (numerical coefficients, weights, configurations) from historical data or commonly known as training data (which has been enriched through feature engineering) in order to best match the known labels. The _hyperparameters_ control how complex the model is and how it learns from the data.
+
+Training in this project is implemented using _scikit-learn (sklearn)_, a widely used Python library for supervised machine learning. Sklearn provides reliable, well-tested implementations of algorithms such as Random Forests and is commonly used in tutorials you can easily find online.
+
+For each training run, the project evaluates a small set of predefined hyperparameter combinations. Each combination is treated as a separate _experiment_ and trained in a loop - each with its own set of hyperparameters. Two key hyperparameters - n_estimators, and max_depth, which control the complexity of the Random Forest model are varied for each experiment.
+
+```python
+EXPERIMENTS = [
+    {"n_estimators": 50, "max_depth": 3},
+    {"n_estimators": 100, "max_depth": 5},
+    {"n_estimators": 200, "max_depth": 8},
+]
 ```
 
-Example response:
+### Model Evaluation
 
-```json
-{
-  "prediction": 123.45
-}
-```
+Each trained model is evaluated on a strictly forward-looking evaluation window to simulate real-world performance. Training and evaluation occur within the same experiment loop, where predictions are made only on data that lies after the training period.  
 
----
+The resulting accuracy is compared against the currently registered champion model, allowing the pipeline to automatically identify and promote better-performing candidates in a fully repeatable and deterministic manner.  
 
-## Some quirks
+### Serving the Model to end users (Inference) via API
 
-* This project is not production‑hardened
+The inference service exposes a lightweight HTTP API (using FastAPI) that loads the currently promoted champion model from MLflow and serves real-time predictions. When run from within the kubernetes cluster, the model is pulled from the MLFlow service, and when run locally it is loaded from a local path.
 
-  * No auth
-  * No autoscaling
-  * No model registry (yet)
- 
-* You may see and verify the container registry for the application images as pointing to localhost. The project does not set up a local container registry, but it should not be an issue as long as we set *imagePullPolicy: IfNotPresent* in our manifests.
-  ```
-  vagrant@kube-worker-1:~$ sudo ctr -n k8s.io images ls | grep localhost
-  localhost/ml-api:latest                                                                            application/vnd.oci.image.index.v1+json                   sha256:72e63c829a4c5a60b5161855d3d67829bf990de56b8334e112c5086b662f620c 166.9 MiB linux/arm64                                                                  io.cri-containerd.image=managed                                 
-  localhost/ml-train:latest                                                                          application/vnd.oci.image.index.v1+json                   sha256:2cfd02a1f030b94880c7d5c9428c7a181f30384167c52ed1fd8920af2282cdd6 264.6 MiB linux/arm64                                                                  io.cri-containerd.image=managed
-  ```
+Instead of retraining or recalculating features at request time, the API focuses solely on model inference, keeping runtime latency low and system responsibilities clearly separated.
 
-* Docker Hub rate limits may affect initial cluster networking components. (Do not vagrant destroy and vagrant up frequently)
+### Automation of Ingestion, Experimentation, Training and Evaluation using Python + k8s CronJob
 
-* Kubernetes API Access Issue on macOS (Apple Silicon) with Vagrant + VirtualBox
-  * When running this setup inside VirtualBox VMs on **macOS Apple Silicon**, you may encounter a situation where:
-    - `kubectl` run on the **host** fails with:
-    
-    ```
-    dial tcp <host-only-ip>:6443: connect: no route to host
-    ```
+### Workflow for Model Promotion, Tagging, Aliasing
 
-    The problem is in the Golang net.Dial method, used by kubectl, and not the cluster setup. This is demonstrated as follows:
-    ```
-    % cat ./test.go
-    package main
-    import (
-      "net"
-      "fmt"
-    )
-    func main() {
-      conn, err := net.Dial("tcp", "192.168.56.10:6443")
-      if err != nil { fmt.Println("fail:", err); return }
-      fmt.Println("connected", conn.RemoteAddr())
-      conn.Close()
-    }
-    % go run ./test.go fail: dial tcp 192.168.56.10:6443: connect: no route to host
-    % curl -k "https://192.168.56.10:6443/version?timeout=32s" { "major": "1", "minor": "31", "gitVersion": "v1.31.1", "gitCommit": "948afe5ca072329a73c8e79ed5938717a5cb3d21", "gitTreeState": "clean", "buildDate": "2024-09-11T21:22:08Z", "goVersion": "go1.22.6", "compiler": "gc", "platform": "linux/arm64" }%
-    % kubectl get no --kubeconfig=./infra-context/admin.conf E0103 15:56:35.815332 27589 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://192.168.56.10:6443/api?timeout=32s\": dial tcp 192.168.56.10:6443: connect: no route to host" E0103 15:56:35.815525 27589 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://192.168.56.10:6443/api?timeout=32s\": dial tcp 192.168.56.10:6443: connect: no route to host" E0103 15:56:35.816710 27589 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://192.168.56.10:6443/api?timeout=32s\": dial tcp 192.168.56.10:6443: connect: no route to host" E0103 15:56:35.816820 27589 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://192.168.56.10:6443/api?timeout=32s\": dial tcp 192.168.56.10:6443: connect: no route to host" E0103 15:56:35.818031 27589 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://192.168.56.10:6443/api?timeout=32s\": dial tcp 192.168.56.10:6443: connect: no route to host" Unable to connect to the server: dial tcp 192.168.56.10:6443: connect: no route to host
-    ```
-    curl works, but not kubectl. A detailed explanation of the phenomenon is as follows:
-    ### Network Topology
-    Original (Failing) Setup
-    ```
-    +--------------------+
-    | macOS Host         |
-    |                    |
-    | kubectl (Go)       |
-    |                    |
-    +---------+----------+
-              |
-              |  VirtualBox host-only network
-              |  (192.168.56.0/24)
-              |
-    +---------v----------+
-    | Control Plane VM   |
-    |                    |
-    | kube-apiserver     |
-    | 0.0.0.0:6443       |
-    +--------------------+
-    ```
-    curl and nc can reach the API server
-    
-    Go-based clients (kubectl, custom Go programs) fail with *no route to host*
-    
-    ### Root Cause
-    
-    This issue is caused by an interaction between:
-    * macOS (Apple Silicon)
-    * VirtualBox host-only networking
-    * Go’s networking stack
-    
-    On this platform combination, VirtualBox host-only interfaces may not be
-    fully visible to the routing APIs used by Go. As a result:
-    
-    * The TCP connection fails at the routing stage
-    * The failure occurs before TLS or authentication
-    * Other user-space networking tools may still work
-    
-    This is a host ↔ VM networking limitation, and not a Kubernetes misconfiguration.
-    
-    ### Workaround
-    Port Forwarding and Localhost Access for the KubeApi Server is applied through the Vagrantfile. This is automated during provisioning with vagrant.
-    
-    Network Topology (Fixed)
-    ```
-    +--------------------+
-    | macOS Host         |
-    |                    |
-    | kubectl (Go)       |
-    | https://127.0.0.1  |
-    +---------+----------+
-              |
-              |  VirtualBox NAT (port forwarding)
-              |  host:6443 → guest:6443
-              |
-    +---------v----------+
-    | Control Plane VM   |
-    |                    |
-    | kube-apiserver     |
-    | 0.0.0.0:6443       |
-    +--------------------+
-    ```
-    
-    This path avoids host-only networking and is fully compatible with Go’s networking stack.
-    Following this, for apple mac silicon users, we request running kubectl as follows:
-    ```
-    kubectl --kubeconfig=./infra-context/local-admin.conf --insecure-skip-tls-verify=true {params and args}
-    ```
-    The local-admin.conf is a k8s config file pointing to localhost. TLS verification needs to be skipped as localhost is not part of the advertised addresses the kube api server was configured with kubeadm. Since this is a workaround which I aim to fix cleanly in the future, I leave it as this.
-    For anyone else not encountering this issue, run kubectl as follows:
-    ```
-    kubectl --kubeconfig=./infra-context/admin.conf {params and args}
-    ```
+This project uses the **MLflow Model Registry** to manage the full lifecycle of trained models in an automated, traceable, and reproducible way. Instead of manually selecting which model should be deployed, the system relies on performance-based promotion driven entirely by evaluation metrics. All trained models are registered under a single registered model name _SPYDirectionModel_.
+
+Each training run may produce a new model version, representing a specific training data slice each with its own set of hyperparameters, features, and data window.
+
+All historical versions are preserved, allowing full experiment traceability and reproducibility.
+
+The pipeline follows a champion–challenger pattern. The currently active model is referenced using the alias _@champion_. Newly trained models act as challengers.
+
+During each automated training cycle:
+
+1. The accuracy of the current champion model is retrieved from MLflow.
+2. Multiple candidate models are trained with different hyperparameters.
+3. Each candidate is evaluated on a strictly forward-looking evaluation window.
+4. The best-performing candidate is selected.
+5. If its accuracy exceeds the champion by a configurable threshold, it is promoted.
+
+This ensures that only demonstrably better models replace the current champion.
+
+When a model version is registered, metadata is attached using MLflow tags.
+
+Typical tags include:
+
+- `env`: deployment environment (e.g. `dev`)
+- `promotion_reason`: reason for promotion (`bootstrap`, `better_than_champion`)
+- `anchor_time`: simulated historical time used for training
+- `train_window_days`: size of the training window
+- `prediction_window_days`: size of the evaluation window
+
+These tags provide:
+
+- Clear model lineage
+- Easier debugging
+- Transparent promotion logic
+- Improved observability in the MLflow UI
+
+### Model Persistence and Registry (allows for manual ops, rollbacks to older versions of the Model)
+
+### Experiment Tracking
 
 ---
 
-## Next extensions
+## Demo
 
-* Add MLflow for experiment tracking
-* Configure Argo CD Workflows for k8s manifests
-* Automate retraining via CronJob
-* Add model versioning using a Model Registry
-* Add a feature store (Feast)
-* Add another interface to the model via KServe (to compare with a regular FastAPI)
-* Replace local storage with object storage
-* Add a standard DevOps pipeline using Github Actions to test the python code
+Here are some shots showcasing how the software looks like when run.  
 
----
+Once the system is up and running, you should be able to access our mini-UP/DOWN guesser service for the SPDR S&P 500 ETF Trust Fund from the browser via a simple GET request.
+![mlops-primer-browser.png](https://github.com/journeyofthesoul/mlops-primer/blob/feature/implement-mlops/docs/images/mlops-primer-browser.png) <br><br>
+What is more interesting will be to look at the MLFlow UI to confirm that the ongoing periodic training really happens, in-line with the promotion and tagging workflow. A simple port-forward in Kubernetes to port 5000 exposes the MLFlow service to localhost. You can see our sets of experiments we named as _spy-direction-training_ in the UI. 
+![mlops-primer-browser.png](https://github.com/journeyofthesoul/mlops-primer/blob/feature/implement-mlops/docs/images/mlflow-ui.png)  
+<br><br>
+You can see all of the experiment runs from the _Runs_ tab. And if you sort out by name, you will find two with the names prefixed in **PROMOTION**. 
+![experiment-runs.png](https://github.com/journeyofthesoul/mlops-primer/blob/feature/implement-mlops/docs/images/experiment-runs.png)   
+<br><br>
+The first of these is the bootstrap model. When the infrastructure was first brought up, no initial model exists. Hence, the first model trained is automatically promoted and aliased with _champion_. The second one simply beat the first one in accuracy which then triggered a PROMOTION run. You also notice that the these two PROMOTION runs are 1 hour and 30 minutes apart. In between, multiple runs (batches of 3-per hyperparameter set) each executed every 5 mins, each shifting the Training+Evaluation Window by 1 day. From what we understand, **none of these runs** resulted to a trained model that evaluated to a better performance (measured in accuracy) than that of the bootstrap model. This is something we will show below.    
+<br><br>
+:rocket: Just would like to put emphasize it took almost 15 runs before we get a model that beats the accuracy of the bootstrap model!! :rocket:    
+<br><br>
+Let's look at each of the runs to see the accuracy. You can do so by clicking on the run. For the bootstrap run we see it has an accuracy of **0.5**:  
+![bootstrap-model.png](https://github.com/journeyofthesoul/mlops-primer/blob/feature/implement-mlops/docs/images/bootstrap-model.png)  
+<br><br>
+And for the other promoted model we got a whopping accuracy of **0.6** !! - Better than pure coin-flipping chance. This confirms our workflow of automatically promoting those that achieve a higher accuracy in our local environment. Are you willing to trust this tool ??? :laughing:     
+![new-champion-model.png](https://github.com/journeyofthesoul/mlops-primer/blob/feature/implement-mlops/docs/images/new-champion-model.png)  
+<br><br>
+Likewise, we can take a look at non-promoted runs and confirm that they do result to an accuracy less than the current champion at the time. (**0.2** in the case of this example)  
+![non-registered-experiment-run.png](https://github.com/journeyofthesoul/mlops-primer/blob/feature/implement-mlops/docs/images/non-registered-experiment-run.png)  
+

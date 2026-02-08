@@ -3,15 +3,15 @@ import yfinance as yf
 from .base import MarketDataSource
 
 
-class YFinanceDataSource(MarketDataSource):
-    def __init__(self, period: str = "5y", interval: str = "1d"):
-        self.period = period
+class YFinanceDataSource:
+    def __init__(self, interval="1d"):
         self.interval = interval
 
-    def load(self, ticker: str):
+    def load(self, ticker, start, end):
         return yf.download(
             ticker,
-            period=self.period,
+            start=start,
+            end=end,
             interval=self.interval,
             progress=False,
         )
