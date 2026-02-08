@@ -60,7 +60,7 @@ The data is retrieved **inside the training container at job execution time**, e
 
 The goal of the training job is intentionally simple:
 
-> Learn a relationship from historical price data and produce a model capable of predicting **next‑day price direction** (binary classification: UP or DOWN).
+> Learn a relationship from historical price data and produce a model capable of making a **short‑horizon binary prediction** (e.g. whether the next‑day price will go **UP** or **DOWN**).
 
 This is **not** intended to be a production‑grade financial model.
 The emphasis is on **workflow mechanics**, not predictive performance.

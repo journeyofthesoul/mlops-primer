@@ -46,6 +46,10 @@ USE_MLFLOW = bool(MLFLOW_TRACKING_URI)
 # Load model
 # -------------------------------------------------------------------
 def load_model():
+    """
+    Loads model from MLflow Registry using alias.
+    Falls back to local sklearn model if MLflow is unavailable.
+    """
     if USE_MLFLOW:
         try:
             mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
@@ -57,7 +61,10 @@ def load_model():
 
             logger.info(
                 "Model loaded successfully from MLflow",
-                extra={"model_name": MLFLOW_MODEL_NAME, "alias": MODEL_ALIAS},
+                extra={
+                    "model_name": MLFLOW_MODEL_NAME,
+                    "alias": MODEL_ALIAS,
+                },
             )
             return model
 
@@ -78,18 +85,25 @@ model = load_model()
 # Feature extraction
 # -------------------------------------------------------------------
 def get_latest_features() -> pd.DataFrame:
+    """
+    Downloads recent market data and builds features identical
+    to training-time feature engineering.
+    """
     logger.info("Downloading market data from yfinance")
 
+    # We need enough history to compute rolling features
     df = yf.download("SPY", period="30d", interval="1d", progress=False)
 
     df["return"] = df["Close"].pct_change()
+    df["ma_3"] = df["Close"].rolling(3).mean()
     df["ma_5"] = df["Close"].rolling(5).mean()
-    df["ma_20"] = df["Close"].rolling(20).mean()
-    df["volatility_10"] = df["return"].rolling(10).std()
+    df["volatility_3"] = df["return"].rolling(3).std()
+
     df = df.dropna()
 
     latest = df.iloc[-1]
-    feature_cols = ["return", "ma_5", "ma_20", "volatility_10"]
+
+    feature_cols = ["return", "ma_3", "ma_5", "volatility_3"]
 
     return pd.DataFrame([latest[feature_cols]])
 
@@ -113,33 +127,36 @@ def predict(
 
     X = get_latest_features()
 
-    # pyfunc-compatible inference
+    # ----------------------------------------------------------------
+    # MLflow-safe prediction handling
+    # ----------------------------------------------------------------
     pred = model.predict(X)
 
     if isinstance(pred, pd.DataFrame):
-        prob = float(pred.iloc[0, 0])
+        score = float(pred.iloc[0, 0])
     elif isinstance(pred, pd.Series):
-        prob = float(pred.iloc[0])
+        score = float(pred.iloc[0])
     elif isinstance(pred, np.ndarray):
-        prob = float(pred[0])
+        score = float(pred[0])
     else:
-        prob = float(pred)
+        score = float(pred)
 
-    prediction = "UP" if prob > threshold else "DOWN"
+    prediction = "UP" if score >= threshold else "DOWN"
 
     logger.info(
         "Prediction completed",
         extra={
-            "probability": prob,
+            "score": score,
             "threshold": threshold,
             "prediction": prediction,
             "model_alias": MODEL_ALIAS,
+            "model_source": "mlflow" if USE_MLFLOW else "local",
         },
     )
 
     return {
         "prediction": prediction,
-        "confidence": round(prob, 3),
+        "confidence": round(score, 3),
         "threshold": threshold,
         "model_source": "mlflow" if USE_MLFLOW else "local",
         "model_alias": MODEL_ALIAS,
